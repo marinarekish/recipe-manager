@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="RecipeManager.Api/RecipeManager.Api.csproj" />
   <Project Path="RecipeManager.Application/RecipeManager.Application.csproj" />
+  <Project Path="RecipeManager.Domain/RecipeManager.Domain.csproj" />
   <Project Path="RecipeManager.Infrastructure/RecipeManager.Infrastructure.csproj" />
   <Project Path="RecipeManager.Tests/RecipeManager.Tests.csproj" />
 </Solution>
