@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RecipeManager.Domain\RecipeManager.Domain.csproj" />
+    <ProjectReference Include="..\RecipeManager.Infrastructure\RecipeManager.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

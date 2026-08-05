@@ -1,28 +1,40 @@
 using RecipeManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Interfaces;
+using RecipeManager.Application.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services
-builder.Services.AddControllers();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-var app = builder.Build();
-
-// Configure HTTP request pipeline
-if (app.Environment.IsDevelopment())
+public class Program
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddControllers();
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+        builder.Services.AddScoped<IRecipeService, RecipeService>();
+        builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IIngredientService, IngredientService>();
+
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        var app = builder.Build();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
+        
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.MapControllers();
-
-app.Run();
