@@ -11,7 +11,7 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
-    public ICollection<Role> Roles { get; set; } = new List<Role>();
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Recipe> CreatedRecipes { get; set; }  = new List<Recipe>();
     public ICollection<UserFavorite> UserFavorites { get; set; } = new List<UserFavorite>();
 }
