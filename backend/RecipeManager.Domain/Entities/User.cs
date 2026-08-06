@@ -14,4 +14,5 @@ public class User
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Recipe> CreatedRecipes { get; set; }  = new List<Recipe>();
     public ICollection<UserFavorite> UserFavorites { get; set; } = new List<UserFavorite>();
+    public ICollection<LoginToken> LoginTokens { get; set; } = new List<LoginToken>();
 }

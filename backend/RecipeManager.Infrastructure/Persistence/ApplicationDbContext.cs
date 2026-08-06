@@ -1,5 +1,4 @@
 using RecipeManager.Domain.Entities;
-using RecipeManager.Infrastructure.Configurations;
 
 namespace RecipeManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +11,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Role> Roles { get; set; }
     
     public DbSet<User> Users { get; set; }
+    public DbSet<LoginToken> LoginTokens { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<UserFavorite> UserFavorites { get; set; }

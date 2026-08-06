@@ -61,6 +61,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(ur => ur.User)
             .HasForeignKey(ur => ur.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(u => u.LoginTokens)
+            .WithOne(t => t.User)
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // unique index
         builder.HasIndex(u => u.Email).IsUnique();
