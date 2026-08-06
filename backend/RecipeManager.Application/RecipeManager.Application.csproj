@@ -5,6 +5,13 @@
     <ProjectReference Include="..\RecipeManager.Infrastructure\RecipeManager.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Contracts\Favorites\" />
+    <Folder Include="Contracts\Ingredients\" />
+    <Folder Include="Contracts\Recipes\" />
+    <Folder Include="Contracts\Users\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

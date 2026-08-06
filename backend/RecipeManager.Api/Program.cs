@@ -17,6 +17,7 @@ public class Program
         builder.Services.AddScoped<IFavoriteService, FavoriteService>();
         builder.Services.AddScoped<IRecipeService, RecipeService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IIngredientService, IngredientService>();
 
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
