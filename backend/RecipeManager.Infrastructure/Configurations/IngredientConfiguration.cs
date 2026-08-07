@@ -14,7 +14,7 @@ public class IngredientConfiguration : IEntityTypeConfiguration<Ingredient>
 
         builder.Property(c => c.IngredientId)
             .HasColumnName("ingredient_id")
-            .ValueGeneratedOnAdd();;
+            .ValueGeneratedOnAdd();
         
         builder.Property(i => i.Name)
             .HasColumnName("name")

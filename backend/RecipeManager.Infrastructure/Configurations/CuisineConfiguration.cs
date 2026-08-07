@@ -30,8 +30,8 @@ public class CuisineConfiguration : IEntityTypeConfiguration<Cuisine>
             new Cuisine { CuisineId = 2, Name = "English" },
             new Cuisine { CuisineId = 3, Name = "French" },
             new Cuisine { CuisineId = 4, Name = "Mediterranean" },
-            new Cuisine  { CuisineId = 5, Name = "Spanish" },
-            new Cuisine  { CuisineId = 6, Name = "Slavic" }
+            new Cuisine { CuisineId = 5, Name = "Spanish" },
+            new Cuisine { CuisineId = 6, Name = "Slavic" }
         );
     }  
 }

@@ -1,3 +1,6 @@
+-- Created by Redgate Data Modeler (https://datamodeler.redgate-platform.com)
+-- Last modification date: 2026-08-06 11:26:22.705
+
 -- tables
 -- Table: categories
 CREATE TABLE categories (
@@ -21,6 +24,17 @@ CREATE TABLE ingredients (
     name varchar(50)  NOT NULL,
     CONSTRAINT uq_ingredient_name UNIQUE (name) NOT DEFERRABLE  INITIALLY IMMEDIATE,
     CONSTRAINT ingredients_pk PRIMARY KEY (ingredient_id)
+);
+
+-- Table: login_tokens
+CREATE TABLE login_tokens (
+    login_token_id int  NOT NULL,
+    user_id int  NOT NULL,
+    code_hash varchar(255)  NOT NULL,
+    created_at timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at timestamp  NOT NULL,
+    used_at timestamp  NOT NULL,
+    CONSTRAINT login_tokens_pk PRIMARY KEY (login_token_id)
 );
 
 -- Table: recipe_ingredients
@@ -90,69 +104,6 @@ CREATE TABLE users_roles (
 );
 
 -- foreign keys
--- Reference: Recipe_Category (table: recipes)
-ALTER TABLE recipes ADD CONSTRAINT Recipe_Category
-    FOREIGN KEY (category_id)
-    REFERENCES categories (category_id)
-    ON DELETE  RESTRICT  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: Recipe_Cuisine (table: recipes)
-ALTER TABLE recipes ADD CONSTRAINT Recipe_Cuisine
-    FOREIGN KEY (cuisine_id)
-    REFERENCES cuisines (cuisine_id)
-    ON DELETE  RESTRICT  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: Recipe_Ingredient_Ingredient (table: recipe_ingredients)
-ALTER TABLE recipe_ingredients ADD CONSTRAINT Recipe_Ingredient_Ingredient
-    FOREIGN KEY (ingredient_id)
-    REFERENCES ingredients (ingredient_id)
-    ON DELETE  RESTRICT  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: Recipe_Ingredient_Recipe (table: recipe_ingredients)
-ALTER TABLE recipe_ingredients ADD CONSTRAINT Recipe_Ingredient_Recipe
-    FOREIGN KEY (recipe_id)
-    REFERENCES recipes (recipe_id)
-    ON DELETE  CASCADE  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: Recipe_User (table: recipes)
-ALTER TABLE recipes ADD CONSTRAINT Recipe_User
-    FOREIGN KEY (author_id)
-    REFERENCES users (user_id)
-    ON DELETE  RESTRICT  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: User_Recipe_Recipe (table: user_favorites)
-ALTER TABLE user_favorites ADD CONSTRAINT User_Recipe_Recipe
-    FOREIGN KEY (recipe_id)
-    REFERENCES recipes (recipe_id)
-    ON DELETE  CASCADE  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
--- Reference: User_Recipe_User (table: user_favorites)
-ALTER TABLE user_favorites ADD CONSTRAINT User_Recipe_User
-    FOREIGN KEY (user_id)
-    REFERENCES users (user_id)
-    ON DELETE  CASCADE  
-    NOT DEFERRABLE 
-    INITIALLY IMMEDIATE
-;
-
 -- Reference: User_Role_Role (table: users_roles)
 ALTER TABLE users_roles ADD CONSTRAINT User_Role_Role
     FOREIGN KEY (role_id)
@@ -171,17 +122,76 @@ ALTER TABLE users_roles ADD CONSTRAINT User_Role_User
     INITIALLY IMMEDIATE
 ;
 
-CREATE INDEX idx_recipes_author
-ON recipes(author_id);
+-- Reference: ingredients_recingredients (table: recipe_ingredients)
+ALTER TABLE recipe_ingredients ADD CONSTRAINT ingredients_recingredients
+    FOREIGN KEY (ingredient_id)
+    REFERENCES ingredients (ingredient_id)
+    ON DELETE  RESTRICT  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
 
-CREATE INDEX idx_recipes_category
-ON recipes(category_id);
+-- Reference: login_users (table: login_tokens)
+ALTER TABLE login_tokens ADD CONSTRAINT login_users
+    FOREIGN KEY (user_id)
+    REFERENCES users (user_id)  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
 
-CREATE INDEX idx_recipes_cuisine
-ON recipes(cuisine_id);
+-- Reference: recipe_category (table: recipes)
+ALTER TABLE recipes ADD CONSTRAINT recipe_category
+    FOREIGN KEY (category_id)
+    REFERENCES categories (category_id)
+    ON DELETE  RESTRICT  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
 
-CREATE INDEX idx_recipe_ingredients_ingredient
-ON recipe_ingredients(ingredient_id);
+-- Reference: recipe_cuisine (table: recipes)
+ALTER TABLE recipes ADD CONSTRAINT recipe_cuisine
+    FOREIGN KEY (cuisine_id)
+    REFERENCES cuisines (cuisine_id)
+    ON DELETE  RESTRICT  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
 
-CREATE INDEX idx_user_favorites_recipe
-ON user_favorites(recipe_id);
+-- Reference: recipe_recingr (table: recipe_ingredients)
+ALTER TABLE recipe_ingredients ADD CONSTRAINT recipe_recingr
+    FOREIGN KEY (recipe_id)
+    REFERENCES recipes (recipe_id)
+    ON DELETE  CASCADE  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
+
+-- Reference: recipe_user (table: recipes)
+ALTER TABLE recipes ADD CONSTRAINT recipe_user
+    FOREIGN KEY (author_id)
+    REFERENCES users (user_id)
+    ON DELETE  RESTRICT  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
+
+-- Reference: recipe_userfav (table: user_favorites)
+ALTER TABLE user_favorites ADD CONSTRAINT recipe_userfav
+    FOREIGN KEY (recipe_id)
+    REFERENCES recipes (recipe_id)
+    ON DELETE  CASCADE  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
+
+-- Reference: user_userfav (table: user_favorites)
+ALTER TABLE user_favorites ADD CONSTRAINT user_userfav
+    FOREIGN KEY (user_id)
+    REFERENCES users (user_id)
+    ON DELETE  CASCADE  
+    NOT DEFERRABLE 
+    INITIALLY IMMEDIATE
+;
+
+-- End of file.
+

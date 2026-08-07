@@ -36,9 +36,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .IsRequired(false);
         
-        // TODO
-        // CreatedAt = DateTime.UtcNow
-        // UpdatedAt = DateTime.UtcNow
         builder.Property(u => u.CreatedAt)
             .HasColumnName("created_at")
             .HasColumnType("timestamp with time zone")

@@ -8,6 +8,12 @@ public record RecipeResponse(
     int Servings,
     string? Instructions,
     int CuisineId,
+    string CuisineName,
     int CategoryId,
-    List<RecipeIngredientResponse> Ingredients
-    );
+    string CategoryName,
+    int AuthorId,
+    string AuthorName,
+    List<RecipeIngredientResponse> Ingredients,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
