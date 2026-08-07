@@ -43,3 +43,6 @@ coverage/
 
 # Build
 dist/
+
+# Claude
+CLAUDE.md
