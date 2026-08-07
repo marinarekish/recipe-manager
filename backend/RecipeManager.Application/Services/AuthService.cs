@@ -1,3 +1,4 @@
+using RecipeManager.Application.Contracts.Auth;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Infrastructure.Persistence;
 
@@ -14,7 +15,7 @@ public class AuthService(ApplicationDbContext context) : IAuthService
         throw new NotImplementedException();
     }
 
-    public Task<bool> VerifyLoginCodeAsync(
+    public Task<AuthResponse> VerifyLoginCodeAsync(
         string email,
         string code,
         CancellationToken ct = default)
