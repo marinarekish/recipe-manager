@@ -1,39 +1,153 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Contracts.Recipes;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
 using RecipeManager.Infrastructure.Persistence;
 
 namespace RecipeManager.Application.Services;
 
-public class RecipeService(ApplicationDbContext context) : IRecipeService
+public class RecipeService(
+    IMapper mapper,
+    ApplicationDbContext context) : IRecipeService
 {
-    private readonly ApplicationDbContext _context = context;
-    public Task<List<Recipe>> GetAllRecipesAsync(int userId, CancellationToken ct = default)
+    public async Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return await context.Recipes
+            .AsNoTracking()
+            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+            .ToListAsync(ct);
     }
 
-    public Task<Recipe> GetRecipeAsync(int recipeId, CancellationToken ct = default)
+    public async Task<RecipeResponse?> GetRecipeByIdAsync(
+        int recipeId,
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return await context.Recipes
+            .AsNoTracking()
+            .Where(r => r.RecipeId == recipeId)
+            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(ct);
     }
 
-    public Task<List<Recipe>> GetAllRecipesByUserIdAsync(int userId, CancellationToken ct = default)
+    public async Task<List<RecipeResponse>?> GetAllRecipesByUserIdAsync(
+        int authorId,
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var authorExists = await context.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.UserId == authorId, ct);
+
+        if (!authorExists)
+            return null;
+
+        return await context.Recipes
+            .AsNoTracking()
+            .Where(r => r.AuthorId == authorId)
+            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+            .ToListAsync(ct);
     }
 
-    public Task CreateRecipeAsync(Recipe recipe, CancellationToken ct = default)
+    public async Task<RecipeResponse?> CreateRecipeAsync(
+        int authorId,
+        CreateRecipeRequest recipe,
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var authorExists = await context.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.UserId == authorId, ct);
+
+        if (!authorExists)
+            return null;
+
+        var recipeToAdd = mapper.Map<Recipe>(recipe);
+
+        recipeToAdd.AuthorId = authorId;
+        recipeToAdd.CreatedAt = DateTime.UtcNow;
+        recipeToAdd.UpdatedAt = DateTime.UtcNow;
+
+        foreach (var item in recipe.Ingredients)
+        {
+            recipeToAdd.RecipeIngredients.Add(new RecipeIngredient
+            {
+                IngredientId = item.IngredientId,
+                Amount = item.Amount,
+                Unit = item.Unit
+            });
+        }
+
+        context.Recipes.Add(recipeToAdd);
+
+        await context.SaveChangesAsync(ct);
+
+        return await context.Recipes
+            .AsNoTracking()
+            .Where(r => r.RecipeId == recipeToAdd.RecipeId)
+            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(ct);
     }
 
-    public Task UpdateRecipeAsync(Recipe recipe, CancellationToken ct = default)
+    public async Task<RecipeResponse?> UpdateRecipeAsync(
+        int recipeId,
+        int authorId,
+        UpdateRecipeRequest recipe,
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var recipeToUpdate = await context.Recipes
+            .Include(r => r.RecipeIngredients)
+            .FirstOrDefaultAsync(
+                r => r.RecipeId == recipeId &&
+                     r.AuthorId == authorId,
+                ct);
+
+        if (recipeToUpdate is null)
+            return null;
+
+        mapper.Map(recipe, recipeToUpdate);
+
+        recipeToUpdate.UpdatedAt = DateTime.UtcNow;
+
+        if (recipe.Ingredients is not null)
+        {
+            recipeToUpdate.RecipeIngredients.Clear();
+
+            foreach (var item in recipe.Ingredients)
+            {
+                recipeToUpdate.RecipeIngredients.Add(new RecipeIngredient
+                {
+                    RecipeId = recipeId,
+                    IngredientId = item.IngredientId,
+                    Amount = item.Amount,
+                    Unit = item.Unit
+                });
+            }
+        }
+
+        await context.SaveChangesAsync(ct);
+
+        return await context.Recipes
+            .AsNoTracking()
+            .Where(r => r.RecipeId == recipeId)
+            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(ct);
     }
 
-    public Task<bool> DeleteRecipeAsync(int id, CancellationToken ct = default)
+    public async Task<bool> DeleteRecipeAsync(
+        int recipeId,
+        CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var recipeToDelete = await context.Recipes
+            .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
+
+        if (recipeToDelete is null)
+            return false;
+
+        context.Recipes.Remove(recipeToDelete);
+
+        await context.SaveChangesAsync(ct);
+
+        return true;
     }
 }

@@ -13,7 +13,9 @@ public record RecipeResponse(
     string CategoryName,
     int AuthorId,
     string AuthorName,
+    
     List<RecipeIngredientResponse> Ingredients,
+    
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

@@ -1,6 +1,3 @@
 namespace RecipeManager.Application.Contracts.Roles;
 
-public record RoleResponse(
-    int Id, 
-    string Name
-);
+public record RoleResponse(int RoleId, string Name);
