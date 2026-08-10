@@ -8,5 +8,6 @@ public record UpdateRecipeRequest(
     int? CookTimeMinutes,
     int? Servings,
     string? Instructions,
+    
     List<RecipeIngredientRequest>? Ingredients
 );

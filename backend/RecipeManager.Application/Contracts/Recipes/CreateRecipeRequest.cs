@@ -10,4 +10,4 @@ public record CreateRecipeRequest(
     string? Instructions,
     
     List<RecipeIngredientRequest> Ingredients
-    );
+);

@@ -1,3 +1,6 @@
 namespace RecipeManager.Application.Contracts.Ingredients;
 
-public record IngredientResponse(int Id, string Name);
+public record IngredientResponse(
+    int IngredientId, 
+    string Name
+    );

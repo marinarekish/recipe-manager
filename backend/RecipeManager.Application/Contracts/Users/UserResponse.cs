@@ -1,6 +1,6 @@
-namespace RecipeManager.Application.Contracts.Users;
-
 using RecipeManager.Application.Contracts.Roles;
+
+namespace RecipeManager.Application.Contracts.Users;
 
 public record UserResponse(
     int UserId,
@@ -8,6 +8,6 @@ public record UserResponse(
     string LastName,
     string Email,
     string? Phone,
-    List<RoleResponse> Roles, 
+    List<RoleResponse> Roles,
     DateTime CreatedAt
 );

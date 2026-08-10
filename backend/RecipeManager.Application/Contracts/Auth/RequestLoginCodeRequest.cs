@@ -1,3 +1,5 @@
 namespace RecipeManager.Application.Contracts.Auth;
 
-public record RequestLoginCodeRequest(string Email);
+public record RequestLoginCodeRequest(
+    string Email
+);
