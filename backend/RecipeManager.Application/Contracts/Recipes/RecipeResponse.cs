@@ -1,21 +1,20 @@
 namespace RecipeManager.Application.Contracts.Recipes;
 
-public record RecipeResponse(
-    int RecipeId,
-    string Title,
-    int PrepTimeMinutes,
-    int CookTimeMinutes,
-    int Servings,
-    string? Instructions,
-    int CuisineId,
-    string CuisineName,
-    int CategoryId,
-    string CategoryName,
-    int AuthorId,
-    string AuthorName,
-    
-    List<RecipeIngredientResponse> Ingredients,
-    
-    DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+public class RecipeResponse
+{
+    public int RecipeId { get; init; }
+    public string Title { get; init; } = null!;
+    public int PrepTimeMinutes { get; init; }
+    public int CookTimeMinutes { get; init; }
+    public int Servings { get; init; }
+    public string? Instructions { get; init; }
+    public int CuisineId { get; init; }
+    public string CuisineName { get; init; } = null!;
+    public int CategoryId { get; init; }
+    public string CategoryName { get; init; } = null!;
+    public int AuthorId { get; init; }
+    public string AuthorName { get; init; } = null!;
+    public List<RecipeIngredientResponse> Ingredients { get; init; } = new();
+    public DateTime CreatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
+}

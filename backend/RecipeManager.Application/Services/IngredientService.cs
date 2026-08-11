@@ -55,7 +55,7 @@ public class IngredientService(
         {
             await context.SaveChangesAsync(ct);
         }
-        catch
+        catch (DbUpdateException)
         {
             ingredient = await context.Ingredients
                 .FirstAsync(i => i.Name.ToLower() == trimmedName.ToLower(), cancellationToken: ct);

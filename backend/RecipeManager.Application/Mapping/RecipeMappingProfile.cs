@@ -41,14 +41,13 @@ public class RecipeMappingProfile : Profile
             .ForMember(d => d.UpdatedAt, opt => opt.Ignore());
 
         CreateMap<UpdateRecipeRequest, Recipe>()
-            .ForMember(d => d.RecipeId, opt => opt.Ignore())
-            .ForMember(d => d.AuthorId, opt => opt.Ignore())
-            .ForMember(d => d.Author, opt => opt.Ignore())
-            .ForMember(d => d.Cuisine, opt => opt.Ignore())
-            .ForMember(d => d.Category, opt => opt.Ignore())
-            .ForMember(d => d.RecipeIngredients, opt => opt.Ignore())
-            .ForMember(d => d.UserFavorites, opt => opt.Ignore())
-            .ForMember(d => d.CreatedAt, opt => opt.Ignore())
-            .ForMember(d => d.UpdatedAt, opt => opt.Ignore());
+            .ForMember(d => d.Title, o => o.Condition(s => s.Title != null))
+            .ForMember(d => d.CuisineId, o => o.Condition(s => s.CuisineId != null))
+            .ForMember(d => d.CategoryId, o => o.Condition(s => s.CategoryId != null))
+            .ForMember(d => d.PrepTimeMinutes, o => o.Condition(s => s.PrepTimeMinutes != null))
+            .ForMember(d => d.CookTimeMinutes, o => o.Condition(s => s.CookTimeMinutes != null))
+            .ForMember(d => d.Servings, o => o.Condition(s => s.Servings != null))
+            .ForMember(d => d.Instructions, o => o.Condition(s => s.Instructions != null));
+        // Ignore id, author, navigations, ingredients, timestamps...
     }
 }

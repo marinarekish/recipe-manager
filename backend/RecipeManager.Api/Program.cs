@@ -27,8 +27,6 @@ public class Program
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<ICuisineService, CuisineService>();
         
-        builder.Services.AddScoped<ILoginCodeService, LoginCodeService>();
-        
         builder.Services.AddAutoMapper(cfg => { }, typeof(RecipeMappingProfile).Assembly);
         
         builder.Services.AddDbContext<ApplicationDbContext>(options =>

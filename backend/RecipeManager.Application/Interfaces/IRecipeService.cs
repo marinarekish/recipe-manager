@@ -22,7 +22,6 @@ public interface IRecipeService
 
     Task<RecipeResponse?> UpdateRecipeAsync(
         int recipeId,
-        int authorId,
         UpdateRecipeRequest recipe,
         CancellationToken ct = default);
 

@@ -1,8 +1,9 @@
 namespace RecipeManager.Application.Contracts.Recipes;
 
-public record RecipeIngredientResponse(
-    int IngredientId,
-    string Name,
-    decimal Amount,
-    string Unit
-);
+public class RecipeIngredientResponse
+{
+    public int IngredientId { get; init; }
+    public string Name { get; init; } = null!;
+    public decimal Amount { get; init; }
+    public string Unit { get; init; } = null!;
+}
