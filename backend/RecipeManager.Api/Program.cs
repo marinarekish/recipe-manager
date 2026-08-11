@@ -14,12 +14,18 @@ public class Program
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-
-        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-        builder.Services.AddScoped<IRecipeService, RecipeService>();
-        builder.Services.AddScoped<IUserService, UserService>();
+        
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<ILoginCodeService, LoginCodeService>();
+        
+        builder.Services.AddScoped<IUserService, UserService>();
+
+        builder.Services.AddScoped<IRecipeService, RecipeService>();
+        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+        
         builder.Services.AddScoped<IIngredientService, IngredientService>();
+        builder.Services.AddScoped<ICategoryService, CategoryService>();
+        builder.Services.AddScoped<ICuisineService, CuisineService>();
         
         builder.Services.AddScoped<ILoginCodeService, LoginCodeService>();
         

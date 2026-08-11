@@ -31,48 +31,36 @@ public class IngredientService(
             .FirstOrDefaultAsync(ct);
     }
 
-    public async Task<IngredientResponse> CreateIngredientAsync(
-        CreateIngredientRequest ingredient, 
-        CancellationToken ct = default)
+    public async Task<IngredientResponse?> GetOrCreateAsync(string name, CancellationToken ct = default)
     {
-        var ingredientToCreate = mapper.Map<Ingredient>(ingredient);
-        
-        context.Ingredients.Add(ingredientToCreate);
-        await context.SaveChangesAsync(ct);
-        
-        return mapper.Map<IngredientResponse>(ingredientToCreate);
-    }
+        var trimmedName = name.Trim();
 
-    public async Task<IngredientResponse?> UpdateIngredientAsync(
-        int id, 
-        CreateIngredientRequest ingredient, 
-        CancellationToken ct = default)
-    {
-        var ingredientToUpdate = await context.Ingredients
-            .FirstOrDefaultAsync(i => i.IngredientId == id, ct);
-            
-        if (ingredientToUpdate == null)
-            return null;
-        
-        mapper.Map(ingredient, ingredientToUpdate);
-        
-        await context.SaveChangesAsync(ct);
-        
-        return mapper.Map<IngredientResponse>(ingredientToUpdate);
-    }
+        if (string.IsNullOrWhiteSpace(trimmedName))
+            throw new ArgumentException("Ingredient name cannot be empty.", nameof(name));
 
-    public async Task<bool> DeleteIngredientAsync(
-        int id, 
-        CancellationToken ct = default)
-    {
-        var ingredientToDelete = await context.Ingredients.FirstOrDefaultAsync(i => i.IngredientId == id, cancellationToken: ct);
+        var ingredient = await context.Ingredients
+            .FirstOrDefaultAsync(i => i.Name.ToLower() == trimmedName.ToLower(), cancellationToken: ct);
+
+        if (ingredient != null)
+            return mapper.Map<IngredientResponse>(ingredient);
+
+        ingredient = new Ingredient
+        {
+            Name = trimmedName
+        };
+
+        context.Ingredients.Add(ingredient);
+
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            ingredient = await context.Ingredients
+                .FirstAsync(i => i.Name.ToLower() == trimmedName.ToLower(), cancellationToken: ct);
+        }
         
-        if (ingredientToDelete == null)
-            return false;
-        
-        context.Ingredients.Remove(ingredientToDelete);
-        
-        await context.SaveChangesAsync(ct);
-        return true;
+        return mapper.Map<IngredientResponse>(ingredient);
     }
 }
