@@ -79,7 +79,6 @@ public class RecipeService(
         }
 
         context.Recipes.Add(recipeToAdd);
-
         await context.SaveChangesAsync(ct);
 
         return await context.Recipes
@@ -89,24 +88,23 @@ public class RecipeService(
             .FirstOrDefaultAsync(ct);
     }
 
+    /// <summary>
+    /// Updates recipe by id only.
+    /// Authorization (owner vs admin) must be enforced in the controller.
+    /// </summary>
     public async Task<RecipeResponse?> UpdateRecipeAsync(
         int recipeId,
-        int authorId,
         UpdateRecipeRequest recipe,
         CancellationToken ct = default)
     {
         var recipeToUpdate = await context.Recipes
             .Include(r => r.RecipeIngredients)
-            .FirstOrDefaultAsync(
-                r => r.RecipeId == recipeId &&
-                     r.AuthorId == authorId,
-                ct);
+            .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
 
         if (recipeToUpdate is null)
             return null;
 
         mapper.Map(recipe, recipeToUpdate);
-
         recipeToUpdate.UpdatedAt = DateTime.UtcNow;
 
         if (recipe.Ingredients is not null)
@@ -134,6 +132,10 @@ public class RecipeService(
             .FirstOrDefaultAsync(ct);
     }
 
+    /// <summary>
+    /// Deletes recipe by id only.
+    /// Authorization must be enforced in the controller.
+    /// </summary>
     public async Task<bool> DeleteRecipeAsync(
         int recipeId,
         CancellationToken ct = default)
@@ -145,7 +147,6 @@ public class RecipeService(
             return false;
 
         context.Recipes.Remove(recipeToDelete);
-
         await context.SaveChangesAsync(ct);
 
         return true;
