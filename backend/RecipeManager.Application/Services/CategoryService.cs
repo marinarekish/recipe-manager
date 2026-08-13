@@ -32,23 +32,22 @@ public class CategoryService(
     public async Task<CategoryResponse?> GetOrCreateAsync(string name, CancellationToken ct = default)
     {
         var trimmedName = name.Trim();
-        
         if (string.IsNullOrWhiteSpace(trimmedName))
-        {
             throw new ArgumentException("Category name cannot be empty.", nameof(name));
-        }
+
+        // Optional: canonicalize storage to lower to match UNIQUE + lookup
+        // var storeName = trimmedName.ToLowerInvariant();
+        var storeName = trimmedName.ToLowerInvariant();
 
         var category = await context.Categories
-            .FirstOrDefaultAsync(c => c.Name.ToLower() == trimmedName.ToLower(), ct);
+            .FirstOrDefaultAsync(
+                c => c.Name.ToLower() == storeName.ToLower(),
+                ct);
 
-        if (category != null)
+        if (category is not null)
             return mapper.Map<CategoryResponse>(category);
 
-        category = new Category
-        {
-            Name = trimmedName
-        };
-
+        category = new Category { Name = storeName };
         context.Categories.Add(category);
 
         try
@@ -58,7 +57,7 @@ public class CategoryService(
         catch (DbUpdateException)
         {
             category = await context.Categories
-                .FirstAsync(c => c.Name.ToLower() == trimmedName.ToLower(), ct);
+                .FirstAsync(c => c.Name.ToLower() == storeName.ToLower(), ct);
         }
 
         return mapper.Map<CategoryResponse>(category);

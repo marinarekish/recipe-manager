@@ -73,9 +73,15 @@ public class RecipeService(
         recipeToAdd.CreatedAt = DateTime.UtcNow;
         recipeToAdd.UpdatedAt = DateTime.UtcNow;
 
+        var ingredientIds = new HashSet<int>();
+
         foreach (var item in recipe.Ingredients)
         {
             var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
+            if (!ingredientIds.Add(ingredientId))
+                throw new ArgumentException(
+                    $"Duplicate ingredient in request (id={ingredientId}).");
 
             recipeToAdd.RecipeIngredients.Add(new RecipeIngredient
             {
@@ -86,7 +92,6 @@ public class RecipeService(
         }
 
         context.Recipes.Add(recipeToAdd);
-
         await context.SaveChangesAsync(ct);
 
         return await context.Recipes
@@ -117,23 +122,39 @@ public class RecipeService(
         if (!isAdmin && recipeToUpdate.AuthorId != currentUserId)
             return new RecipeUpdateResult(RecipeOperationStatus.Forbidden, null);
 
-        mapper.Map(recipe, recipeToUpdate);
+        // Partial update: only non-null scalars (safer than relying only on AutoMapper)
+        if (recipe.Title is not null)
+            recipeToUpdate.Title = recipe.Title;
+        if (recipe.PrepTimeMinutes is not null)
+            recipeToUpdate.PrepTimeMinutes = recipe.PrepTimeMinutes.Value;
+        if (recipe.CookTimeMinutes is not null)
+            recipeToUpdate.CookTimeMinutes = recipe.CookTimeMinutes.Value;
+        if (recipe.Servings is not null)
+            recipeToUpdate.Servings = recipe.Servings.Value;
+        if (recipe.Instructions is not null)
+            recipeToUpdate.Instructions = recipe.Instructions;
 
-        if (recipe.CuisineId is not null || recipe.CuisineName is not null)
+        if (recipe.CuisineId is not null || !string.IsNullOrWhiteSpace(recipe.CuisineName))
             recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
 
-        if (recipe.CategoryId is not null || recipe.CategoryName is not null)
+        if (recipe.CategoryId is not null || !string.IsNullOrWhiteSpace(recipe.CategoryName))
             recipeToUpdate.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
-
+        
         recipeToUpdate.UpdatedAt = DateTime.UtcNow;
 
         if (recipe.Ingredients is not null)
         {
             recipeToUpdate.RecipeIngredients.Clear();
 
+            var ingredientIds = new HashSet<int>();
+
             foreach (var item in recipe.Ingredients)
             {
                 var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
+                if (!ingredientIds.Add(ingredientId))
+                    throw new ArgumentException(
+                        $"Duplicate ingredient in request (id={ingredientId}).");
 
                 recipeToUpdate.RecipeIngredients.Add(new RecipeIngredient
                 {
@@ -196,8 +217,10 @@ public class RecipeService(
                 .AsNoTracking()
                 .AnyAsync(c => c.CuisineId == cuisineId.Value, ct);
 
-            if (exists)
-                return cuisineId.Value;
+            if (!exists)
+                throw new ArgumentException($"Cuisine id {cuisineId.Value} was not found.");
+
+            return cuisineId.Value;
         }
 
         if (!string.IsNullOrWhiteSpace(cuisineName))
@@ -224,8 +247,10 @@ public class RecipeService(
                 .AsNoTracking()
                 .AnyAsync(c => c.CategoryId == categoryId.Value, ct);
 
-            if (exists)
-                return categoryId.Value;
+            if (!exists)
+                throw new ArgumentException($"Category id {categoryId.Value} was not found.");
+
+            return categoryId.Value;
         }
 
         if (!string.IsNullOrWhiteSpace(categoryName))
@@ -252,16 +277,16 @@ public class RecipeService(
                 .AsNoTracking()
                 .AnyAsync(i => i.IngredientId == ingredientId.Value, ct);
 
-            if (exists)
-                return ingredientId.Value;
+            if (!exists)
+                throw new ArgumentException($"Ingredient id {ingredientId.Value} was not found.");
+
+            return ingredientId.Value;
         }
 
-        if (!string.IsNullOrWhiteSpace(ingredientName))
-        {
-            var ingredient = await ingredientService.GetOrCreateAsync(ingredientName, ct);
-            return ingredient!.IngredientId;
-        }
-
-        throw new ArgumentException("Ingredient must be provided as an id or a name.");
+        if (string.IsNullOrWhiteSpace(ingredientName))
+            throw new ArgumentException("Ingredient must be provided as an id or a name.");
+        
+        var ingredient = await ingredientService.GetOrCreateAsync(ingredientName, ct);
+        return ingredient!.IngredientId;
     }
 }

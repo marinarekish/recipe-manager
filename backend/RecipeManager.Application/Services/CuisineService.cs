@@ -35,17 +35,18 @@ public class CuisineService (
         
         if (string.IsNullOrWhiteSpace(trimmedName))
             throw new ArgumentException("Cuisine name cannot be empty.", nameof(name));
-
+        
+        var storeName = trimmedName.ToLowerInvariant();
+        
         var cuisine = await context.Cuisines
-            .FirstOrDefaultAsync(c => c.Name.ToLower() == trimmedName.ToLower(), cancellationToken: ct);
-
+            .FirstOrDefaultAsync(
+                c => c.Name.ToLower() == storeName.ToLower(),
+                ct);
+            
         if (cuisine != null)
             return mapper.Map<CuisineResponse>(cuisine);
 
-        cuisine = new Cuisine
-        {
-            Name = trimmedName
-        };
+        cuisine = new Cuisine { Name = storeName };
         
         context.Cuisines.Add(cuisine);
 

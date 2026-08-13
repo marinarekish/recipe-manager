@@ -38,17 +38,16 @@ public class IngredientService(
         if (string.IsNullOrWhiteSpace(trimmedName))
             throw new ArgumentException("Ingredient name cannot be empty.", nameof(name));
 
+        var storeName = trimmedName.ToLowerInvariant();
         var ingredient = await context.Ingredients
-            .FirstOrDefaultAsync(i => i.Name.ToLower() == trimmedName.ToLower(), cancellationToken: ct);
-
+            .FirstOrDefaultAsync(
+                i => i.Name.ToLower() == storeName.ToLower(),
+                ct);
+        
         if (ingredient != null)
             return mapper.Map<IngredientResponse>(ingredient);
 
-        ingredient = new Ingredient
-        {
-            Name = trimmedName
-        };
-
+        ingredient = new Ingredient { Name = trimmedName };
         context.Ingredients.Add(ingredient);
 
         try
