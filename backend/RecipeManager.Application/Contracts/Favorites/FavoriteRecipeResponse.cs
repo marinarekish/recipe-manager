@@ -1,7 +1,8 @@
 namespace RecipeManager.Application.Contracts.Favorites;
 
-public record FavoriteRecipeResponse(
-    int RecipeId,
-    string Title,
-    DateTime AddedAt 
-);
+public class FavoriteRecipeResponse()
+{
+    public int RecipeId { get; init; }
+    public string Title { get; init; } = null!;
+    public DateTime AddedAt { get; init; }
+}
