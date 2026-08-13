@@ -10,7 +10,10 @@ namespace RecipeManager.Application.Services;
 
 public class RecipeService(
     IMapper mapper,
-    ApplicationDbContext context) : IRecipeService
+    ApplicationDbContext context,
+    ICuisineService cuisineService,
+    ICategoryService categoryService,
+    IIngredientService ingredientService) : IRecipeService
 {
     public async Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
         CancellationToken ct = default)
@@ -65,20 +68,25 @@ public class RecipeService(
         var recipeToAdd = mapper.Map<Recipe>(recipe);
 
         recipeToAdd.AuthorId = authorId;
+        recipeToAdd.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
+        recipeToAdd.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
         recipeToAdd.CreatedAt = DateTime.UtcNow;
         recipeToAdd.UpdatedAt = DateTime.UtcNow;
 
         foreach (var item in recipe.Ingredients)
         {
+            var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
             recipeToAdd.RecipeIngredients.Add(new RecipeIngredient
             {
-                IngredientId = item.IngredientId,
+                IngredientId = ingredientId,
                 Amount = item.Amount,
                 Unit = item.Unit
             });
         }
 
         context.Recipes.Add(recipeToAdd);
+
         await context.SaveChangesAsync(ct);
 
         return await context.Recipes
@@ -89,11 +97,13 @@ public class RecipeService(
     }
 
     /// <summary>
-    /// Updates recipe by id only.
-    /// Authorization (owner vs admin) must be enforced in the controller.
+    /// Updates a recipe by id. Ownership is enforced here:
+    /// a non-admin can only update their own recipes.
     /// </summary>
-    public async Task<RecipeResponse?> UpdateRecipeAsync(
+    public async Task<RecipeUpdateResult> UpdateRecipeAsync(
         int recipeId,
+        int currentUserId,
+        bool isAdmin,
         UpdateRecipeRequest recipe,
         CancellationToken ct = default)
     {
@@ -102,9 +112,19 @@ public class RecipeService(
             .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
 
         if (recipeToUpdate is null)
-            return null;
+            return new RecipeUpdateResult(RecipeOperationStatus.NotFound, null);
+
+        if (!isAdmin && recipeToUpdate.AuthorId != currentUserId)
+            return new RecipeUpdateResult(RecipeOperationStatus.Forbidden, null);
 
         mapper.Map(recipe, recipeToUpdate);
+
+        if (recipe.CuisineId is not null || recipe.CuisineName is not null)
+            recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
+
+        if (recipe.CategoryId is not null || recipe.CategoryName is not null)
+            recipeToUpdate.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
+
         recipeToUpdate.UpdatedAt = DateTime.UtcNow;
 
         if (recipe.Ingredients is not null)
@@ -113,10 +133,12 @@ public class RecipeService(
 
             foreach (var item in recipe.Ingredients)
             {
+                var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
                 recipeToUpdate.RecipeIngredients.Add(new RecipeIngredient
                 {
                     RecipeId = recipeId,
-                    IngredientId = item.IngredientId,
+                    IngredientId = ingredientId,
                     Amount = item.Amount,
                     Unit = item.Unit
                 });
@@ -125,30 +147,121 @@ public class RecipeService(
 
         await context.SaveChangesAsync(ct);
 
-        return await context.Recipes
+        var updatedRecipe = await context.Recipes
             .AsNoTracking()
             .Where(r => r.RecipeId == recipeId)
             .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return new RecipeUpdateResult(RecipeOperationStatus.Ok, updatedRecipe);
     }
 
     /// <summary>
-    /// Deletes recipe by id only.
-    /// Authorization must be enforced in the controller.
+    /// Deletes a recipe by id. Ownership is enforced here:
+    /// a non-admin can only delete their own recipes.
     /// </summary>
-    public async Task<bool> DeleteRecipeAsync(
+    public async Task<RecipeOperationStatus> DeleteRecipeAsync(
         int recipeId,
+        int currentUserId,
+        bool isAdmin,
         CancellationToken ct = default)
     {
         var recipeToDelete = await context.Recipes
             .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
 
         if (recipeToDelete is null)
-            return false;
+            return RecipeOperationStatus.NotFound;
+
+        if (!isAdmin && recipeToDelete.AuthorId != currentUserId)
+            return RecipeOperationStatus.Forbidden;
 
         context.Recipes.Remove(recipeToDelete);
         await context.SaveChangesAsync(ct);
 
-        return true;
+        return RecipeOperationStatus.Ok;
+    }
+
+    /// <summary>
+    /// Resolves a cuisine id from the request: a valid id wins,
+    /// otherwise the name is looked up (or created).
+    /// </summary>
+    private async Task<int> ResolveCuisineIdAsync(
+        int? cuisineId,
+        string? cuisineName,
+        CancellationToken ct)
+    {
+        if (cuisineId.HasValue)
+        {
+            var exists = await context.Cuisines
+                .AsNoTracking()
+                .AnyAsync(c => c.CuisineId == cuisineId.Value, ct);
+
+            if (exists)
+                return cuisineId.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cuisineName))
+        {
+            var cuisine = await cuisineService.GetOrCreateAsync(cuisineName, ct);
+            return cuisine!.CuisineId;
+        }
+
+        throw new ArgumentException("Cuisine must be provided as an id or a name.");
+    }
+
+    /// <summary>
+    /// Resolves a category id from the request: a valid id wins,
+    /// otherwise the name is looked up (or created).
+    /// </summary>
+    private async Task<int> ResolveCategoryIdAsync(
+        int? categoryId,
+        string? categoryName,
+        CancellationToken ct)
+    {
+        if (categoryId.HasValue)
+        {
+            var exists = await context.Categories
+                .AsNoTracking()
+                .AnyAsync(c => c.CategoryId == categoryId.Value, ct);
+
+            if (exists)
+                return categoryId.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(categoryName))
+        {
+            var category = await categoryService.GetOrCreateAsync(categoryName, ct);
+            return category!.CategoryId;
+        }
+
+        throw new ArgumentException("Category must be provided as an id or a name.");
+    }
+
+    /// <summary>
+    /// Resolves an ingredient id from the request: a valid id wins,
+    /// otherwise the name is looked up (or created).
+    /// </summary>
+    private async Task<int> ResolveIngredientIdAsync(
+        int? ingredientId,
+        string? ingredientName,
+        CancellationToken ct)
+    {
+        if (ingredientId.HasValue)
+        {
+            var exists = await context.Ingredients
+                .AsNoTracking()
+                .AnyAsync(i => i.IngredientId == ingredientId.Value, ct);
+
+            if (exists)
+                return ingredientId.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(ingredientName))
+        {
+            var ingredient = await ingredientService.GetOrCreateAsync(ingredientName, ct);
+            return ingredient!.IngredientId;
+        }
+
+        throw new ArgumentException("Ingredient must be provided as an id or a name.");
     }
 }

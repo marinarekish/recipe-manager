@@ -35,6 +35,8 @@ public class RecipeMappingProfile : Profile
             .ForMember(d => d.Author, opt => opt.Ignore())
             .ForMember(d => d.Cuisine, opt => opt.Ignore())
             .ForMember(d => d.Category, opt => opt.Ignore())
+            .ForMember(d => d.CuisineId, opt => opt.Ignore())
+            .ForMember(d => d.CategoryId, opt => opt.Ignore())
             .ForMember(d => d.RecipeIngredients, opt => opt.Ignore())
             .ForMember(d => d.UserFavorites, opt => opt.Ignore())
             .ForMember(d => d.CreatedAt, opt => opt.Ignore())
@@ -42,12 +44,14 @@ public class RecipeMappingProfile : Profile
 
         CreateMap<UpdateRecipeRequest, Recipe>()
             .ForMember(d => d.Title, o => o.Condition(s => s.Title != null))
-            .ForMember(d => d.CuisineId, o => o.Condition(s => s.CuisineId != null))
-            .ForMember(d => d.CategoryId, o => o.Condition(s => s.CategoryId != null))
             .ForMember(d => d.PrepTimeMinutes, o => o.Condition(s => s.PrepTimeMinutes != null))
             .ForMember(d => d.CookTimeMinutes, o => o.Condition(s => s.CookTimeMinutes != null))
             .ForMember(d => d.Servings, o => o.Condition(s => s.Servings != null))
-            .ForMember(d => d.Instructions, o => o.Condition(s => s.Instructions != null));
-        // Ignore id, author, navigations, ingredients, timestamps...
+            .ForMember(d => d.Instructions, o => o.Condition(s => s.Instructions != null))
+            .ForMember(d => d.CuisineId, o => o.Ignore())
+            .ForMember(d => d.CategoryId, o => o.Ignore());
+        // CuisineId/CategoryId and ingredient ids are resolved via id-or-name
+        // in RecipeService, so nullable ints are never mapped onto the entity.
+        // Author, navigations and timestamps stay unchanged.
     }
 }

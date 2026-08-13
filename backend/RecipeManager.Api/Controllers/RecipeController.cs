@@ -67,16 +67,24 @@ public class RecipeController (
         [FromBody] CreateRecipeRequest recipeRequest,
         CancellationToken ct = default)
     {
-        var createdRecipe = await recipeService.CreateRecipeAsync(CurrentUserId, recipeRequest, ct);
+        try
+        {
+            var createdRecipe = await recipeService.CreateRecipeAsync(CurrentUserId, recipeRequest, ct);
 
-        if (createdRecipe is null)
-            return NotFound(); 
-        
-        return CreatedAtRoute("GetRecipeById", new { id = createdRecipe.RecipeId }, createdRecipe);
+            if (createdRecipe is null)
+                return NotFound();
+
+            return CreatedAtRoute("GetRecipeById", new { id = createdRecipe.RecipeId }, createdRecipe);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(RecipeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RecipeResponse>> UpdateRecipe(
@@ -84,20 +92,22 @@ public class RecipeController (
         [FromBody] UpdateRecipeRequest recipeRequest,
         CancellationToken ct = default)
     {
-        var recipeToUpdate = await recipeService.GetRecipeByIdAsync(id, ct);
-        
-        if (recipeToUpdate is null)
-            return NotFound();
+        try
+        {
+            var result = await recipeService.UpdateRecipeAsync(
+                id, CurrentUserId, IsAdmin, recipeRequest, ct);
 
-        if (!IsAdmin && recipeToUpdate.AuthorId != CurrentUserId)
-            return Forbid();
-        
-        var updatedRecipe = await recipeService.UpdateRecipeAsync(id, recipeRequest, ct);
-        
-        if (updatedRecipe is null)
-            return NotFound();
-
-        return Ok(updatedRecipe);
+            return result.Status switch
+            {
+                RecipeOperationStatus.NotFound => NotFound(),
+                RecipeOperationStatus.Forbidden => Forbid(),
+                _ => Ok(result.Recipe)
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id:int}")]
@@ -105,21 +115,16 @@ public class RecipeController (
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteRecipe(
-        int id, 
+        int id,
         CancellationToken ct = default)
     {
-        var recipeToDelete = await recipeService.GetRecipeByIdAsync(id, ct);
-        if (recipeToDelete is null)
-            return NotFound();
+        var status = await recipeService.DeleteRecipeAsync(id, CurrentUserId, IsAdmin, ct);
 
-        if (!IsAdmin && recipeToDelete.AuthorId != CurrentUserId)
-            return Forbid();
-        
-        var deleted = await recipeService.DeleteRecipeAsync(id, ct);
-        
-        if (!deleted)
-            return NotFound();
-        
-        return NoContent();
+        return status switch
+        {
+            RecipeOperationStatus.NotFound => NotFound(),
+            RecipeOperationStatus.Forbidden => Forbid(),
+            _ => NoContent()
+        };
     }
 }

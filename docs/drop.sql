@@ -1,57 +1,32 @@
--- Created by Redgate Data Modeler (https://datamodeler.redgate-platform.com)
--- Last modification date: 2026-08-06 11:26:22.705
+-- Recipe Manager — drop script (mirrors docs/scheme.sql)
+-- Drops foreign keys first, then tables in reverse dependency order.
 
 -- foreign keys
-ALTER TABLE users_roles
-    DROP CONSTRAINT User_Role_Role;
+ALTER TABLE login_tokens DROP CONSTRAINT IF EXISTS FK_login_tokens_users_user_id;
 
-ALTER TABLE users_roles
-    DROP CONSTRAINT User_Role_User;
+ALTER TABLE users_roles DROP CONSTRAINT IF EXISTS FK_users_roles_users_user_id;
+ALTER TABLE users_roles DROP CONSTRAINT IF EXISTS FK_users_roles_roles_role_id;
 
-ALTER TABLE recipe_ingredients
-    DROP CONSTRAINT ingredients_recingredients;
+ALTER TABLE user_favorites DROP CONSTRAINT IF EXISTS FK_user_favorites_users_user_id;
+ALTER TABLE user_favorites DROP CONSTRAINT IF EXISTS FK_user_favorites_recipes_recipe_id;
 
-ALTER TABLE login_tokens
-    DROP CONSTRAINT login_users;
+ALTER TABLE recipe_ingredients DROP CONSTRAINT IF EXISTS FK_recipe_ingredients_recipes_recipe_id;
+ALTER TABLE recipe_ingredients DROP CONSTRAINT IF EXISTS FK_recipe_ingredients_ingredients_ingredient_id;
 
-ALTER TABLE recipes
-    DROP CONSTRAINT recipe_category;
-
-ALTER TABLE recipes
-    DROP CONSTRAINT recipe_cuisine;
-
-ALTER TABLE recipe_ingredients
-    DROP CONSTRAINT recipe_recingr;
-
-ALTER TABLE recipes
-    DROP CONSTRAINT recipe_user;
-
-ALTER TABLE user_favorites
-    DROP CONSTRAINT recipe_userfav;
-
-ALTER TABLE user_favorites
-    DROP CONSTRAINT user_userfav;
+ALTER TABLE recipes DROP CONSTRAINT IF EXISTS FK_recipes_users_author_id;
+ALTER TABLE recipes DROP CONSTRAINT IF EXISTS FK_recipes_categories_category_id;
+ALTER TABLE recipes DROP CONSTRAINT IF EXISTS FK_recipes_cuisines_cuisine_id;
 
 -- tables
-DROP TABLE categories;
-
-DROP TABLE cuisines;
-
-DROP TABLE ingredients;
-
-DROP TABLE login_tokens;
-
-DROP TABLE recipe_ingredients;
-
-DROP TABLE recipes;
-
-DROP TABLE roles;
-
-DROP TABLE user_favorites;
-
-DROP TABLE users;
-
-DROP TABLE users_roles;
+DROP TABLE IF EXISTS recipe_ingredients;
+DROP TABLE IF EXISTS user_favorites;
+DROP TABLE IF EXISTS users_roles;
+DROP TABLE IF EXISTS login_tokens;
+DROP TABLE IF EXISTS recipes;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS cuisines;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS ingredients;
+DROP TABLE IF EXISTS users;
 
 -- End of file.
-

@@ -20,12 +20,16 @@ public interface IRecipeService
         CreateRecipeRequest recipe,
         CancellationToken ct = default);
 
-    Task<RecipeResponse?> UpdateRecipeAsync(
+    Task<RecipeUpdateResult> UpdateRecipeAsync(
         int recipeId,
+        int currentUserId,
+        bool isAdmin,
         UpdateRecipeRequest recipe,
         CancellationToken ct = default);
 
-    Task<bool> DeleteRecipeAsync(
+    Task<RecipeOperationStatus> DeleteRecipeAsync(
         int recipeId,
+        int currentUserId,
+        bool isAdmin,
         CancellationToken ct = default);
 }

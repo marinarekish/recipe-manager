@@ -25,7 +25,7 @@ public class RecipeIngredientConfiguration : IEntityTypeConfiguration<RecipeIngr
 
         builder.Property(ri => ri.Amount)
             .HasColumnName("amount")
-            .HasColumnType("decimal(5,2)")
+            .HasColumnType("decimal(10,2)")
             .IsRequired();
 
         builder.Property(ri => ri.Unit)

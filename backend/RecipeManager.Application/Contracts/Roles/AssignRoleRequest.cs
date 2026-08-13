@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace RecipeManager.Application.Contracts.Roles;
 
 public record AssignRoleRequest(
-    int UserId,
-    int RoleId
+    [property: Range(1, int.MaxValue)] int UserId,
+    [property: Range(1, int.MaxValue)] int RoleId
 );

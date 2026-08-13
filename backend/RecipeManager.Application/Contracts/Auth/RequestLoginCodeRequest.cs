@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace RecipeManager.Application.Contracts.Auth;
 
 public record RequestLoginCodeRequest(
-    string Email
+    [property: Required, EmailAddress] string Email
 );

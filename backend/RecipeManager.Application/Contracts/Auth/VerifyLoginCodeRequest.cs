@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace RecipeManager.Application.Contracts.Auth;
 
 public record VerifyLoginCodeRequest(
-    string Email,
-    string Code
+    [property: Required, EmailAddress] string Email,
+    [property: Required, StringLength(6, MinimumLength = 6)] string Code
 );
