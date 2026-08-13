@@ -1,3 +1,7 @@
 namespace RecipeManager.Application.Contracts.Roles;
 
-public record RoleResponse(int RoleId, string Name);
+public class RoleResponse
+{
+    public int RoleId { get; init; }
+    public string Name { get; init; } = null!;
+}

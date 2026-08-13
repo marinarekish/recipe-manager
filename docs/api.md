@@ -166,6 +166,84 @@ id-or-name fallback as `POST` when provided:
 
 ---
 
+## Users — `/api/users`
+
+Same auth stub as recipes: current user is always id `1`, `IsAdmin = true`.
+Switch the constants in `UserController` to test as a regular user.
+
+### `GET /api/users/me`
+Returns the current user's profile (includes roles).
+
+- **200** — `UserResponse`
+- **404** — current user does not exist in DB
+
+### `PUT /api/users/me`
+Updates the current user's own profile. Every field optional; omitted/null
+fields keep their current value. `email` (when provided) is trimmed,
+lower-cased and must not belong to another user.
+
+Request (`UpdateUserRequest`):
+
+```json
+{
+  "firstName": "Maryna",
+  "email": "maryna@example.com"
+}
+```
+
+- **200** — `UserResponse`
+- **400** — email already used by another user
+- **404** — current user does not exist
+
+### `GET /api/users`
+Admin only. Lists all users.
+
+- **200** — `List<UserResponse>`
+- **403** — non-admin
+
+### `GET /api/users/{id}`
+Admin only.
+
+- **200** — `UserResponse`
+- **403** — non-admin
+- **404** — not found
+
+### `PUT /api/users/{id}/role`
+Admin only. Replaces the user's roles with the single role from the body.
+Guarded so the system always keeps at least one Administrator: removing the
+Administrator role from the last admin is rejected.
+
+Request (`AssignRoleRequest`):
+
+```json
+{ "roleId": 2 }
+```
+
+- **200** — `UserResponse`
+- **400** — would remove the role from the last administrator
+- **403** — non-admin
+- **404** — user or role not found
+
+`UserResponse`:
+
+```json
+{
+  "userId": 1,
+  "firstName": "Maryna",
+  "lastName": "Rekish",
+  "email": "maryna@example.com",
+  "phone": null,
+  "roles": [
+    { "roleId": 1, "name": "Administrator" }
+  ],
+  "createdAt": "2026-08-11T15:00:00Z"
+}
+```
+
+New users (via `IUserService.CreateUserAsync`) get the `User` role by default.
+
+---
+
 ## Response shapes
 
 `RecipeResponse`:
@@ -200,8 +278,6 @@ Timestamps are UTC (`DateTime.UtcNow`); DB columns are `timestamptz`.
 
 - **Auth** — `IAuthService`/`AuthService` are implemented but there is no
   `AuthController`, so no login endpoints exist yet. See `auth-flow.md`.
-- **Users** — `IUserService` is stubbed (`NotImplementedException`); no
-  `UserController`.
 - **Favorites** — `IFavoriteService` is implemented; no `FavoriteController`.
 
 Swagger UI (`/swagger`) is enabled in Development only.
