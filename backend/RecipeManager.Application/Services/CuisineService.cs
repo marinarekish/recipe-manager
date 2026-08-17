@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Cuisines;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -8,7 +9,7 @@ using RecipeManager.Infrastructure.Persistence;
 
 namespace RecipeManager.Application.Services;
 
-public class CuisineService (
+public class CuisineService(
     IMapper mapper,
     ApplicationDbContext context) : ICuisineService
 {
@@ -20,34 +21,37 @@ public class CuisineService (
             .ToListAsync(ct);
     }
 
-    public async Task<CuisineResponse?> GetCuisineByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<CuisineResponse>> GetCuisineByIdAsync(int id, CancellationToken ct = default)
     {
-        return await context.Cuisines
+        var cuisine = await context.Cuisines
             .AsNoTracking()
             .Where(c => c.CuisineId == id)
             .ProjectTo<CuisineResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return cuisine is not null
+            ? Result<CuisineResponse>.Ok(cuisine)
+            : Result<CuisineResponse>.NotFound();
     }
 
-    public async Task<CuisineResponse?> GetOrCreateAsync(string name, CancellationToken ct = default)
+    public async Task<Result<CuisineResponse>> GetOrCreateAsync(string name, CancellationToken ct = default)
     {
         var trimmedName = name.Trim();
-        
+
         if (string.IsNullOrWhiteSpace(trimmedName))
-            throw new ArgumentException("Cuisine name cannot be empty.", nameof(name));
-        
+            return Result<CuisineResponse>.ValidationError("Cuisine name cannot be empty.");
+
         var storeName = trimmedName.ToLowerInvariant();
-        
+
         var cuisine = await context.Cuisines
             .FirstOrDefaultAsync(
                 c => c.Name.ToLower() == storeName.ToLower(),
                 ct);
-            
-        if (cuisine != null)
-            return mapper.Map<CuisineResponse>(cuisine);
+
+        if (cuisine is not null)
+            return Result<CuisineResponse>.Ok(mapper.Map<CuisineResponse>(cuisine));
 
         cuisine = new Cuisine { Name = storeName };
-        
         context.Cuisines.Add(cuisine);
 
         try
@@ -60,6 +64,6 @@ public class CuisineService (
                 .FirstAsync(c => c.Name.ToLower() == trimmedName.ToLower(), ct);
         }
 
-        return mapper.Map<CuisineResponse>(cuisine);
+        return Result<CuisineResponse>.Ok(mapper.Map<CuisineResponse>(cuisine));
     }
 }

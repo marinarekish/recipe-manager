@@ -225,8 +225,8 @@ public class RecipeService(
 
         if (!string.IsNullOrWhiteSpace(cuisineName))
         {
-            var cuisine = await cuisineService.GetOrCreateAsync(cuisineName, ct);
-            return cuisine!.CuisineId;
+            var result = await cuisineService.GetOrCreateAsync(cuisineName, ct);
+            return result.Value!.CuisineId;
         }
 
         throw new ArgumentException("Cuisine must be provided as an id or a name.");
