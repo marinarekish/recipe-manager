@@ -286,7 +286,7 @@ public class RecipeService(
         if (string.IsNullOrWhiteSpace(ingredientName))
             throw new ArgumentException("Ingredient must be provided as an id or a name.");
         
-        var ingredient = await ingredientService.GetOrCreateAsync(ingredientName, ct);
-        return ingredient!.IngredientId;
+        var result = await ingredientService.GetOrCreateAsync(ingredientName, ct);
+        return result.Value!.IngredientId;
     }
 }
