@@ -125,6 +125,10 @@ CI so drift cannot slip in silently.
 
 ## Conventions
 
+- **Result pattern** — service methods return `Result` / `Result<T>`
+  instead of throwing exceptions or returning `null`. Controllers map
+  these to HTTP via `ToActionResult()` — no per-exception `try/catch`
+  blocks. See `result-convention.md`.
 - **EF Configurations** — one `IEntityTypeConfiguration<T>` per entity in
   `RecipeManager.Infrastructure/Configurations`, registered via
   `ApplyConfigurationsFromAssembly` in `ApplicationDbContext`.
