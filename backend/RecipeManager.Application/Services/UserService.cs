@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Users;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -23,53 +24,67 @@ public class UserService(
             .ToListAsync(ct);
     }
 
-    public async Task<UserResponse?> GetUserByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<UserResponse>> GetUserByIdAsync(int id, CancellationToken ct = default)
     {
-        return await context.Users
+        var user = await context.Users
             .AsNoTracking()
             .Where(u => u.UserId == id)
             .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return user is null
+            ? Result<UserResponse>.NotFound()
+            : Result<UserResponse>.Ok(user);
     }
 
-    public async Task<UserResponse> CreateUserAsync(
+    public async Task<Result<UserResponse>> CreateUserAsync(
         CreateUserRequest user,
         CancellationToken ct = default)
     {
-        var email = user.Email.Trim().ToLowerInvariant();
-
-        var emailExists = await context.Users
-            .AsNoTracking()
-            .AnyAsync(u => u.Email == email, ct);
-
-        if (emailExists)
-            throw new ArgumentException("User with this email already exists.");
-
-        var defaultRoleId = await GetRoleIdByNameAsync("User", ct);
-
-        var userToAdd = new User
+        try
         {
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = email,
-            Phone = user.Phone,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            var email = user.Email.Trim().ToLowerInvariant();
 
-        userToAdd.UserRoles.Add(new UserRole { RoleId = defaultRoleId });
+            var emailExists = await context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Email == email, ct);
 
-        context.Users.Add(userToAdd);
-        await context.SaveChangesAsync(ct);
+            if (emailExists)
+                return Result<UserResponse>.ValidationError(
+                    "User with this email already exists.");
 
-        return (await context.Users
-            .AsNoTracking()
-            .Where(u => u.UserId == userToAdd.UserId)
-            .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(ct))!;
+            var defaultRoleId = await GetRoleIdByNameAsync("User", ct);
+
+            var userToAdd = new User
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = email,
+                Phone = user.Phone,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            userToAdd.UserRoles.Add(new UserRole { RoleId = defaultRoleId });
+
+            context.Users.Add(userToAdd);
+            await context.SaveChangesAsync(ct);
+
+            var created = await context.Users
+                .AsNoTracking()
+                .Where(u => u.UserId == userToAdd.UserId)
+                .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+
+            return Result<UserResponse>.Ok(created!);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<UserResponse>.ValidationError(ex.Message);
+        }
     }
 
-    public async Task<UserUpdateResult> UpdateUserAsync(
+    public async Task<Result<UserResponse>> UpdateUserAsync(
         int id,
         UpdateUserRequest user,
         CancellationToken ct = default)
@@ -78,45 +93,53 @@ public class UserService(
             .FirstOrDefaultAsync(u => u.UserId == id, ct);
 
         if (userToUpdate is null)
-            return new UserUpdateResult(UserOperationStatus.NotFound, null);
+            return Result<UserResponse>.NotFound();
 
-        if (user.Email is not null)
+        try
         {
-            var email = user.Email.Trim().ToLowerInvariant();
+            if (user.Email is not null)
+            {
+                var email = user.Email.Trim().ToLowerInvariant();
 
-            var emailExists = await context.Users
+                var emailExists = await context.Users
+                    .AsNoTracking()
+                    .AnyAsync(u => u.Email == email && u.UserId != id, ct);
+
+                if (emailExists)
+                    return Result<UserResponse>.ValidationError(
+                        "User with this email already exists.");
+
+                userToUpdate.Email = email;
+            }
+
+            if (user.FirstName is not null)
+                userToUpdate.FirstName = user.FirstName;
+
+            if (user.LastName is not null)
+                userToUpdate.LastName = user.LastName;
+
+            if (user.Phone is not null)
+                userToUpdate.Phone = user.Phone;
+
+            userToUpdate.UpdatedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync(ct);
+
+            var updatedUser = await context.Users
                 .AsNoTracking()
-                .AnyAsync(u => u.Email == email && u.UserId != id, ct);
+                .Where(u => u.UserId == id)
+                .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
 
-            if (emailExists)
-                throw new ArgumentException("User with this email already exists.");
-
-            userToUpdate.Email = email;
+            return Result<UserResponse>.Ok(updatedUser!);
         }
-
-        if (user.FirstName is not null)
-            userToUpdate.FirstName = user.FirstName;
-
-        if (user.LastName is not null)
-            userToUpdate.LastName = user.LastName;
-
-        if (user.Phone is not null)
-            userToUpdate.Phone = user.Phone;
-
-        userToUpdate.UpdatedAt = DateTime.UtcNow;
-
-        await context.SaveChangesAsync(ct);
-
-        var updatedUser = await context.Users
-            .AsNoTracking()
-            .Where(u => u.UserId == id)
-            .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(ct);
-
-        return new UserUpdateResult(UserOperationStatus.Ok, updatedUser);
+        catch (ArgumentException ex)
+        {
+            return Result<UserResponse>.ValidationError(ex.Message);
+        }
     }
 
-    public async Task<UserOperationStatus> DeleteUserAsync(
+    public async Task<Result> DeleteUserAsync(
         int id,
         CancellationToken ct = default)
     {
@@ -125,21 +148,28 @@ public class UserService(
             .FirstOrDefaultAsync(u => u.UserId == id, ct);
 
         if (userToDelete is null)
-            return UserOperationStatus.NotFound;
+            return Result.NotFound();
 
-        var adminRoleId = await GetRoleIdByNameAsync(AdministratorRoleName, ct);
+        try
+        {
+            var adminRoleId = await GetRoleIdByNameAsync(AdministratorRoleName, ct);
 
-        if (userToDelete.UserRoles.Any(ur => ur.RoleId == adminRoleId) &&
-            await GetAdminCountAsync(adminRoleId, ct) == 1)
-            throw new ArgumentException("Cannot delete the last administrator.");
+            if (userToDelete.UserRoles.Any(ur => ur.RoleId == adminRoleId) &&
+                await GetAdminCountAsync(adminRoleId, ct) == 1)
+                return Result.ValidationError("Cannot delete the last administrator.");
 
-        context.Users.Remove(userToDelete);
-        await context.SaveChangesAsync(ct);
+            context.Users.Remove(userToDelete);
+            await context.SaveChangesAsync(ct);
 
-        return UserOperationStatus.Ok;
+            return Result.Ok();
+        }
+        catch (ArgumentException ex)
+        {
+            return Result.ValidationError(ex.Message);
+        }
     }
 
-    public async Task<UserUpdateResult> AssignRoleAsync(
+    public async Task<Result<UserResponse>> AssignRoleAsync(
         int userId,
         int roleId,
         CancellationToken ct = default)
@@ -149,38 +179,46 @@ public class UserService(
             .FirstOrDefaultAsync(u => u.UserId == userId, ct);
 
         if (user is null)
-            return new UserUpdateResult(UserOperationStatus.NotFound, null);
+            return Result<UserResponse>.NotFound();
 
         var role = await context.Roles
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.RoleId == roleId, ct);
 
         if (role is null)
-            return new UserUpdateResult(UserOperationStatus.NotFound, null);
+            return Result<UserResponse>.NotFound();
 
-        var adminRoleId = await GetRoleIdByNameAsync(AdministratorRoleName, ct);
-        var isCurrentlyAdmin = user.UserRoles.Any(ur => ur.RoleId == adminRoleId);
+        try
+        {
+            var adminRoleId = await GetRoleIdByNameAsync(AdministratorRoleName, ct);
+            var isCurrentlyAdmin = user.UserRoles.Any(ur => ur.RoleId == adminRoleId);
 
-        if (isCurrentlyAdmin &&
-            role.RoleId != adminRoleId &&
-            await GetAdminCountAsync(adminRoleId, ct) == 1)
-            throw new ArgumentException("Cannot remove the role from the last administrator.");
+            if (isCurrentlyAdmin &&
+                role.RoleId != adminRoleId &&
+                await GetAdminCountAsync(adminRoleId, ct) == 1)
+                return Result<UserResponse>.ValidationError(
+                    "Cannot remove the role from the last administrator.");
 
-        foreach (var userRole in user.UserRoles.Where(ur => ur.RoleId != roleId).ToList())
-            user.UserRoles.Remove(userRole);
+            foreach (var userRole in user.UserRoles.Where(ur => ur.RoleId != roleId).ToList())
+                user.UserRoles.Remove(userRole);
 
-        if (user.UserRoles.All(ur => ur.RoleId != roleId))
-            user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
+            if (user.UserRoles.All(ur => ur.RoleId != roleId))
+                user.UserRoles.Add(new UserRole { UserId = userId, RoleId = roleId });
 
-        await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
 
-        var updatedUser = await context.Users
-            .AsNoTracking()
-            .Where(u => u.UserId == userId)
-            .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(ct);
+            var updatedUser = await context.Users
+                .AsNoTracking()
+                .Where(u => u.UserId == userId)
+                .ProjectTo<UserResponse>(mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
 
-        return new UserUpdateResult(UserOperationStatus.Ok, updatedUser);
+            return Result<UserResponse>.Ok(updatedUser!);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<UserResponse>.ValidationError(ex.Message);
+        }
     }
 
     private async Task<int> GetRoleIdByNameAsync(string roleName, CancellationToken ct)
