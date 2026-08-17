@@ -255,8 +255,8 @@ public class RecipeService(
 
         if (!string.IsNullOrWhiteSpace(categoryName))
         {
-            var category = await categoryService.GetOrCreateAsync(categoryName, ct);
-            return category!.CategoryId;
+            var result = await categoryService.GetOrCreateAsync(categoryName, ct);
+            return result.Value!.CategoryId;
         }
 
         throw new ArgumentException("Category must be provided as an id or a name.");

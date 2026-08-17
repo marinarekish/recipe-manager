@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Categories;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -9,7 +10,7 @@ using RecipeManager.Infrastructure.Persistence;
 namespace RecipeManager.Application.Services;
 
 public class CategoryService(
-    IMapper mapper, 
+    IMapper mapper,
     ApplicationDbContext context) : ICategoryService
 {
     public async Task<List<CategoryResponse>> GetAllCategoriesAsync(CancellationToken ct = default)
@@ -20,23 +21,26 @@ public class CategoryService(
             .ToListAsync(ct);
     }
 
-    public async Task<CategoryResponse?> GetCategoryByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<CategoryResponse>> GetCategoryByIdAsync(int id, CancellationToken ct = default)
     {
-        return await context.Categories
+        var category = await context.Categories
             .AsNoTracking()
             .Where(c => c.CategoryId == id)
             .ProjectTo<CategoryResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return category is not null
+            ? Result<CategoryResponse>.Ok(category)
+            : Result<CategoryResponse>.NotFound();
     }
 
-    public async Task<CategoryResponse?> GetOrCreateAsync(string name, CancellationToken ct = default)
+    public async Task<Result<CategoryResponse>> GetOrCreateAsync(string name, CancellationToken ct = default)
     {
         var trimmedName = name.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedName))
-            throw new ArgumentException("Category name cannot be empty.", nameof(name));
 
-        // Optional: canonicalize storage to lower to match UNIQUE + lookup
-        // var storeName = trimmedName.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(trimmedName))
+            return Result<CategoryResponse>.ValidationError("Category name cannot be empty.");
+
         var storeName = trimmedName.ToLowerInvariant();
 
         var category = await context.Categories
@@ -45,7 +49,7 @@ public class CategoryService(
                 ct);
 
         if (category is not null)
-            return mapper.Map<CategoryResponse>(category);
+            return Result<CategoryResponse>.Ok(mapper.Map<CategoryResponse>(category));
 
         category = new Category { Name = storeName };
         context.Categories.Add(category);
@@ -60,6 +64,6 @@ public class CategoryService(
                 .FirstAsync(c => c.Name.ToLower() == storeName.ToLower(), ct);
         }
 
-        return mapper.Map<CategoryResponse>(category);
+        return Result<CategoryResponse>.Ok(mapper.Map<CategoryResponse>(category));
     }
 }
