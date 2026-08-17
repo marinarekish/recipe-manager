@@ -1,3 +1,4 @@
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Favorites;
 
 namespace RecipeManager.Application.Interfaces;
@@ -8,12 +9,12 @@ public interface IFavoriteService
         int userId, 
         CancellationToken ct = default);
     
-    Task<FavoriteRecipeResponse?> AddFavoriteAsync(
+    Task<Result<FavoriteRecipeResponse>> AddFavoriteAsync(
         int userId, 
         int recipeId, 
         CancellationToken ct = default);
     
-    Task<bool> RemoveFavoriteAsync(
+    Task<Result> RemoveFavoriteAsync(
         int userId, 
         int recipeId, 
         CancellationToken ct = default);

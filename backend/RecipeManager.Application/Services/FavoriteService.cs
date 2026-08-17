@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Favorites;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -23,7 +24,7 @@ public class FavoriteService(
             .ToListAsync(ct);
     }
 
-    public async Task<FavoriteRecipeResponse?> AddFavoriteAsync(
+    public async Task<Result<FavoriteRecipeResponse>> AddFavoriteAsync(
         int userId, 
         int recipeId, 
         CancellationToken ct = default)
@@ -31,14 +32,15 @@ public class FavoriteService(
         var alreadyExists = await IsFavoriteAsync(userId, recipeId, ct);
 
         if (alreadyExists)
-            return null;
+            return Result<FavoriteRecipeResponse>.Conflict(
+                "Recipe is already in favorites.");
         
         var recipeExists = await context.Recipes
             .AsNoTracking()
             .AnyAsync(r => r.RecipeId == recipeId, ct);
         
         if (!recipeExists)
-            return null;
+            return Result<FavoriteRecipeResponse>.NotFound();
 
         var favoriteToAdd = new UserFavorite
         {
@@ -51,14 +53,16 @@ public class FavoriteService(
         context.UserFavorites.Add(favoriteToAdd);
         await context.SaveChangesAsync(ct);
         
-        return await context.UserFavorites
+        var created = await context.UserFavorites
             .AsNoTracking()
             .Where(f => f.UserId == userId && f.RecipeId == recipeId)
             .ProjectTo<FavoriteRecipeResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return Result<FavoriteRecipeResponse>.Ok(created!);
     }
 
-    public async Task<bool> RemoveFavoriteAsync(
+    public async Task<Result> RemoveFavoriteAsync(
         int userId, 
         int recipeId, 
         CancellationToken ct = default)
@@ -67,12 +71,12 @@ public class FavoriteService(
             .FirstOrDefaultAsync(uf => uf.UserId == userId && uf.RecipeId == recipeId, ct);
         
         if (favToRemove == null)
-            return false;
+            return Result.NotFound();
         
         context.UserFavorites.Remove(favToRemove);
         await context.SaveChangesAsync(ct);
         
-        return true;
+        return Result.Ok();
     }
 
     public async Task<bool> IsFavoriteAsync(
