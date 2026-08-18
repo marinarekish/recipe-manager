@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Roles;
 using RecipeManager.Application.Contracts.Users;
 using RecipeManager.Application.Interfaces;
@@ -19,38 +20,22 @@ public class UserController(IUserService userService) : ControllerBase
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserResponse>> GetCurrentUser(CancellationToken ct = default)
+    public async Task<IActionResult> GetCurrent(CancellationToken ct = default)
     {
-        var user = await userService.GetUserByIdAsync(CurrentUserId, ct);
-
-        if (user is null)
-            return NotFound();
-
-        return Ok(user);
+        var result = await userService.GetUserByIdAsync(CurrentUserId, ct);
+        return result.ToActionResult();
     }
 
     [HttpPut("me")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserResponse>> UpdateCurrentUser(
+    public async Task<IActionResult> UpdateCurrentUser(
         [FromBody] UpdateUserRequest userRequest,
         CancellationToken ct = default)
     {
-        try
-        {
-            var result = await userService.UpdateUserAsync(CurrentUserId, userRequest, ct);
-
-            return result.Status switch
-            {
-                UserOperationStatus.NotFound => NotFound(),
-                _ => Ok(result.User)
-            };
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await userService.UpdateUserAsync(CurrentUserId, userRequest, ct);
+        return result.ToActionResult();
     }
 
     [HttpGet]
@@ -69,19 +54,15 @@ public class UserController(IUserService userService) : ControllerBase
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserResponse>> GetUserById(
+    public async Task<IActionResult> GetUserById(
         int id,
         CancellationToken ct = default)
     {
         if (!IsAdmin)
             return Forbid();
 
-        var user = await userService.GetUserByIdAsync(id, ct);
-
-        if (user is null)
-            return NotFound();
-
-        return Ok(user);
+        var result = await userService.GetUserByIdAsync(id, ct);
+        return result.ToActionResult();
     }
 
     [HttpPut("{id:int}/role")]
@@ -89,7 +70,7 @@ public class UserController(IUserService userService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserResponse>> AssignRole(
+    public async Task<IActionResult> AssignRole(
         int id,
         [FromBody] AssignRoleRequest roleRequest,
         CancellationToken ct = default)
@@ -97,19 +78,7 @@ public class UserController(IUserService userService) : ControllerBase
         if (!IsAdmin)
             return Forbid();
 
-        try
-        {
-            var result = await userService.AssignRoleAsync(id, roleRequest.RoleId, ct);
-
-            return result.Status switch
-            {
-                UserOperationStatus.NotFound => NotFound(),
-                _ => Ok(result.User)
-            };
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await userService.AssignRoleAsync(id, roleRequest.RoleId, ct);
+        return result.ToActionResult();
     }
 }

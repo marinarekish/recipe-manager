@@ -1,3 +1,4 @@
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Cuisines;
 
 namespace RecipeManager.Application.Interfaces;
@@ -6,12 +7,12 @@ public interface ICuisineService
 {
     Task<List<CuisineResponse>> GetAllCuisinesAsync(
         CancellationToken ct = default);
-    
-    Task<CuisineResponse?> GetCuisineByIdAsync(
-        int id, 
+
+    Task<Result<CuisineResponse>> GetCuisineByIdAsync(
+        int id,
         CancellationToken ct = default);
-    
-    Task<CuisineResponse?> GetOrCreateAsync(
-        string name, 
+
+    Task<Result<CuisineResponse>> GetOrCreateAsync(
+        string name,
         CancellationToken ct = default);
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Favorites;
 using RecipeManager.Application.Interfaces;
 
@@ -24,29 +25,25 @@ public class FavoriteController(IFavoriteService favoriteService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<FavoriteRecipeResponse?>> AddFavoriteAsync(
+    public async Task<IActionResult> AddFavoriteAsync(
         [FromBody] CreateFavoriteRequest request,
         CancellationToken ct = default)
     {
-        var created = await favoriteService.AddFavoriteAsync(
+        var result = await favoriteService.AddFavoriteAsync(
             CurrentUserId, request.RecipeId, ct);
 
-        if (created is not null)
-            return CreatedAtRoute("GetFavorites", created);
+        if (!result.IsSuccess)
+            return result.ToActionResult();
 
-        if (await favoriteService.IsFavoriteAsync(CurrentUserId, request.RecipeId, ct))
-            return Conflict(new { message = "Recipe is already in favorites." });
-
-        return NotFound(new { message = "Recipe not found." });
+        return CreatedAtRoute("GetFavorites", result.Value);
     }
 
     [HttpDelete("{id:int}", Name = "DeleteFavorite")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> DeleteFavoriteAsync(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteFavoriteAsync(int id, CancellationToken ct = default)
     {
-        var favToDelete = await favoriteService.RemoveFavoriteAsync(CurrentUserId, id, ct);
-        
-        return favToDelete ? NoContent() : NotFound();
+        var result = await favoriteService.RemoveFavoriteAsync(CurrentUserId, id, ct);
+        return result.IsSuccess ? NoContent() : result.ToActionResult();
     }
 }

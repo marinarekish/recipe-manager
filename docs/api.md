@@ -1,31 +1,76 @@
 # Recipe Manager — REST API Contract
 
-> Actual state as of the RecipeController PR. Auth is stubbed with constants
-> (see "Authorization" below); JWT is out of scope for now.
-
 All endpoints are served under `/api` by the `RecipeManager.Api` project.
 JSON is used for request/response bodies. Property names are serialized in
 PascalCase by default.
+
+Error responses use the Result pattern — see `result-convention.md` for
+the full mapping.
 
 ---
 
 ## Authorization (current stub)
 
-Until JWT lands, `RecipeController` uses two compile-time constants:
+Every controller uses two compile-time constants until JWT lands:
 
 ```csharp
-private const int CurrentUserId = 1; // admin user id
+private const int CurrentUserId = 1; // switch for manual testing
 private const bool IsAdmin = true;   // true = Admin, false = User
 ```
 
-Consequences of the stub:
+Switch the constants in each controller to test as a regular user. There
+is no `[Authorize]` yet; every request is treated as authenticated.
 
-- "Current user" is always user id `1` — **that user must exist in the
-  database** or `GET /api/recipes/me` and `POST /api/recipes` return `404`.
-- `GET /api/recipes` (admin-only) returns `403` when `IsAdmin` is `false`.
-  When `IsAdmin` is `true` the `403` branch is compiled out entirely
-  (compiler warning CS0162).
-- There is no `[Authorize]` yet; every request is treated as authenticated.
+---
+
+## Auth — `/api/auth`
+
+Passwordless login via email + one-time code. See `auth-flow.md`.
+
+### `POST /api/auth/request-code`
+
+Issues a 6-digit login code for the given email. Returns the same
+response whether the email exists or not (to prevent user enumeration
+at the HTTP level — the service layer distinguishes internally).
+
+Request:
+
+```json
+{ "email": "user@example.com" }
+```
+
+- **200** — `{ "message": "If the account exists, a login code has been issued." }`
+- **404** — email not found
+
+### `POST /api/auth/verify-code`
+
+Verifies the code and returns the authenticated user profile.
+
+Request:
+
+```json
+{ "email": "user@example.com", "code": "123456" }
+```
+
+- **200** — `AuthResponse`
+- **401** — code invalid or expired
+- **404** — email not found
+
+`AuthResponse`:
+
+```json
+{
+  "user": {
+    "userId": 1,
+    "firstName": "Maryna",
+    "lastName": "Rekish",
+    "email": "maryna@example.com",
+    "phone": null,
+    "roles": [{ "roleId": 1, "name": "Administrator" }],
+    "createdAt": "2026-08-11T15:00:00Z"
+  }
+}
+```
 
 ---
 
@@ -53,7 +98,7 @@ Request:
 ```
 
 - **200** — `CategoryResponse`
-- **400** — empty name (`{ "message": "..." }`)
+- **400** — empty name (`{ "message": "...", "errors": ["..."] }`)
 
 `CategoryResponse`: `{ "categoryId": 1, "name": "Dessert" }`
 
@@ -134,7 +179,7 @@ Validation: `title` required; `ingredients` required (≥ 1 item);
 - **201** — `RecipeResponse` with `Location` header
   (`GET /api/recipes/{id}`)
 - **404** — current user does not exist
-- **400** — validation/model-binding failure, or a cuisine/category/ingredient
+- **400** — validation failure, or a cuisine/category/ingredient
   missing both id and name
 
 ### `PUT /api/recipes/{id}`  (idempotent full/partial update)
@@ -156,7 +201,7 @@ id-or-name fallback as `POST` when provided:
 - **200** — `RecipeResponse`
 - **403** — recipe exists but belongs to another user (non-admin)
 - **404** — not found
-- **400** — validation/model-binding failure, or a cuisine/category/ingredient
+- **400** — validation failure, or a cuisine/category/ingredient
   missing both id and name
 
 ### `DELETE /api/recipes/{id}`
@@ -166,10 +211,45 @@ id-or-name fallback as `POST` when provided:
 
 ---
 
-## Users — `/api/users`
+## Favorites — `/api/favorites`
 
-Same auth stub as recipes: current user is always id `1`, `IsAdmin = true`.
-Switch the constants in `UserController` to test as a regular user.
+### `GET /api/favorites`
+Returns the current user's favorite recipes.
+
+- **200** — `List<FavoriteRecipeResponse>`
+
+### `POST /api/favorites`
+Adds a recipe to the current user's favorites.
+
+Request:
+
+```json
+{ "recipeId": 4 }
+```
+
+- **201** — `FavoriteRecipeResponse`
+- **404** — recipe not found
+- **409** — recipe already in favorites
+
+### `DELETE /api/favorites/{id}`
+Removes a recipe from the current user's favorites.
+
+- **204** — removed
+- **404** — favorite not found
+
+`FavoriteRecipeResponse`:
+
+```json
+{
+  "recipeId": 4,
+  "title": "Test pasta",
+  "addedAt": "2026-08-13T13:36:04.888564Z"
+}
+```
+
+---
+
+## Users — `/api/users`
 
 ### `GET /api/users/me`
 Returns the current user's profile (includes roles).
@@ -236,7 +316,8 @@ Request (`AssignRoleRequest`):
   "roles": [
     { "roleId": 1, "name": "Administrator" }
   ],
-  "createdAt": "2026-08-11T15:00:00Z"
+  "createdAt": "2026-08-11T15:00:00Z",
+  "updatedAt": "2026-08-11T15:00:00Z"
 }
 ```
 
@@ -274,10 +355,16 @@ Timestamps are UTC (`DateTime.UtcNow`); DB columns are `timestamptz`.
 
 ---
 
-## Not yet exposed via HTTP
+## Error response format
 
-- **Auth** — `IAuthService`/`AuthService` are implemented but there is no
-  `AuthController`, so no login endpoints exist yet. See `auth-flow.md`.
-- **Favorites** — `IFavoriteService` is implemented; no `FavoriteController`.
+All error responses follow the Result pattern (`result-convention.md`):
+
+| Status | Body |
+| ------ | ---- |
+| 400 | `{ "message": "...", "errors": ["..."] }` |
+| 401 | no body (RFC 9110 problem details) |
+| 403 | no body |
+| 404 | `{ "message": "..." }` or RFC 9110 problem details |
+| 409 | `{ "message": "..." }` |
 
 Swagger UI (`/swagger`) is enabled in Development only.

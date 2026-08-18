@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Categories;
 using RecipeManager.Application.Interfaces;
 
@@ -6,7 +7,7 @@ namespace RecipeManager.Api.Controllers;
 
 [ApiController]
 [Route("api/categories")]
-public class CategoryController (
+public class CategoryController(
     ICategoryService categoryService) : ControllerBase
 {
     [HttpGet(Name = "GetAllCategories")]
@@ -18,38 +19,23 @@ public class CategoryController (
     [HttpGet("{id}", Name = "GetCategoryById")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(CategoryResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<CategoryResponse>> GetCategoryById(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetCategoryById(int id, CancellationToken ct = default)
     {
-        var category = await categoryService.GetCategoryByIdAsync(id, ct);
-        
-        if  (category == null)
-            return NotFound();
-        
-        return category;
+        var result = await categoryService.GetCategoryByIdAsync(id, ct);
+        return result.ToActionResult();
     }
 
     [HttpPost("get-or-create", Name = "GetOrCreateCategory")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(CategoryResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<CategoryResponse>> GetOrCreate(
+    public async Task<IActionResult> GetOrCreate(
         [FromBody] CreateCategoryRequest request,
         CancellationToken ct = default)
     {
-        try
-        {
-            var category = await categoryService.GetOrCreateAsync(request.Name, ct);
-            
-            if (category == null)
-                return BadRequest();
-            
-            return category;
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await categoryService.GetOrCreateAsync(request.Name, ct);
+        return result.ToActionResult();
     }
-    
+
     // Update and Delete are out of scope.
     // Users cannot modify or remove shared reference data.
 }

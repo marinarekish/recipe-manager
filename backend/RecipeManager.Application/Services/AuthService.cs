@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Auth;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -16,7 +17,7 @@ public class AuthService(
 {
     private const int LoginCodeLifetimeMinutes = 10;
 
-    public async Task RequestLoginCodeAsync(
+    public async Task<Result> RequestLoginCodeAsync(
         string email,
         CancellationToken ct = default)
     {
@@ -28,7 +29,7 @@ public class AuthService(
                 ct);
 
         if (user is null)
-            throw new KeyNotFoundException("User with this email was not found.");
+            return Result.NotFound("User with this email was not found.");
 
         var code = loginCodeService.GenerateCode();
         var codeHash = loginCodeService.HashCode(code);
@@ -65,9 +66,11 @@ public class AuthService(
             "Login code for user {UserId}: {Code}",
             user.UserId,
             code);
+
+        return Result.Ok();
     }
 
-    public async Task<AuthResponse> VerifyLoginCodeAsync(
+    public async Task<Result<AuthResponse>> VerifyLoginCodeAsync(
         string email,
         string code,
         CancellationToken ct = default)
@@ -82,7 +85,7 @@ public class AuthService(
                 ct);
 
         if (user is null)
-            throw new KeyNotFoundException("User with this email was not found.");
+            return Result<AuthResponse>.NotFound("User with this email was not found.");
 
         var now = DateTime.UtcNow;
 
@@ -95,10 +98,10 @@ public class AuthService(
             .FirstOrDefaultAsync(ct);
 
         if (loginToken is null)
-            throw new UnauthorizedAccessException("Login code is invalid or expired.");
+            return Result<AuthResponse>.Unauthorized("Login code is invalid or expired.");
 
         if (!loginCodeService.VerifyCode(code, loginToken.CodeHash))
-            throw new UnauthorizedAccessException("Login code is invalid or expired.");
+            return Result<AuthResponse>.Unauthorized("Login code is invalid or expired.");
 
         loginToken.UsedAt = now;
 
@@ -106,6 +109,6 @@ public class AuthService(
 
         var userResponse = mapper.Map<Application.Contracts.Users.UserResponse>(user);
 
-        return new AuthResponse(userResponse);
+        return Result<AuthResponse>.Ok(new AuthResponse(userResponse));
     }
 }

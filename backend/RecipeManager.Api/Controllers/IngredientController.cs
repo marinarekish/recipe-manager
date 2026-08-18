@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Ingredients;
 using RecipeManager.Application.Interfaces;
 
@@ -18,38 +19,23 @@ public class IngredientController(
     [HttpGet("{id}", Name = "GetIngredientById")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(IngredientResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IngredientResponse>> GetIngredientById(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetIngredientById(int id, CancellationToken ct = default)
     {
-        var ingredient = await ingredientService.GetIngredientByIdAsync(id, ct);
-
-        if (ingredient == null)
-            return NotFound();
-        
-        return ingredient;
+        var result = await ingredientService.GetIngredientByIdAsync(id, ct);
+        return result.ToActionResult();
     }
-    
+
     [HttpPost("get-or-create", Name = "GetOrCreateIngredient")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(IngredientResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IngredientResponse>> GetOrCreateIngredient(
+    public async Task<IActionResult> GetOrCreateIngredient(
         [FromBody] CreateIngredientRequest request,
         CancellationToken ct = default)
     {
-        try
-        {
-            var ingredient = await ingredientService.GetOrCreateAsync(request.Name, ct);
-
-            if (ingredient == null)
-                return BadRequest();
-
-            return ingredient;
-
-        } catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await ingredientService.GetOrCreateAsync(request.Name, ct);
+        return result.ToActionResult();
     }
-    
+
     // Update and Delete are out of scope.
     // Users cannot modify or remove shared reference data.
 }

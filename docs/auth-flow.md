@@ -1,7 +1,7 @@
 # Recipe Manager — Passwordless Login (Login Code) Flow
 
-> Design and current implementation notes. The service layer exists; the
-> HTTP endpoints, email delivery, and JWT are planned follow-ups.
+> Design and implementation notes. Both the service layer and HTTP
+> endpoints are implemented.
 
 ## Goal
 
@@ -12,13 +12,13 @@ The code is sent to the user's email (currently just logged in development).
 
 ```
 Client                         Server (AuthService)
-  |   POST /auth/request-code (email)         |
+  |   POST /api/auth/request-code (email)       |
   |------------------------------------------>| 1. look up user by email
   |                                           | 2. invalidate all active tokens
   |                                           | 3. generate 6-digit code
   |                                           | 4. store SHA-256 hash as LoginToken
   |                                           | 5. (dev) log the plaintext code
-  |   POST /auth/verify-code (email, code)    |
+  |   POST /api/auth/verify-code (email, code) |
   |------------------------------------------>| 6. find latest active token for user
   |                                           | 7. verify code hash (constant-time)
   |                                           | 8. mark token used
@@ -54,32 +54,28 @@ Indexes exist on `user_id`, `code_hash`, and `expires_at`.
   on both request and verify.
 - **Lifetime** — `LoginCodeLifetimeMinutes = 10`.
 
-## Current gaps / known issues
+## Error signaling
 
-1. **No HTTP endpoints yet** — `IAuthService` is not exposed through a
-   controller, so the flow cannot be called over the wire.
-2. **No email sender** — the code is written to the log
+Service methods return `Result` / `Result<T>` — no exceptions for expected
+failures. Controllers use `ToActionResult()` to map to HTTP:
+
+| Condition                          | Result               | HTTP |
+| ---------------------------------- | -------------------- | ---- |
+| Email not found                    | `NotFound`           | 404  |
+| Code invalid or expired            | `Unauthorized`       | 401  |
+| Success (request-code)             | `Ok`                 | 200  |
+| Success (verify-code)              | `Ok(authResponse)`  | 200  |
+
+See `result-convention.md` for the full mapping.
+
+## Known issues / future work
+
+1. **No email sender** — the code is written to the log
    (`logger.LogInformation("Login code ... {Code}")`), development-only
    behavior flagged with a comment.
-3. **User enumeration** — `RequestLoginCodeAsync` throws
-   `KeyNotFoundException` when the email is unknown, so the response
-   reveals whether an email is registered. Use a generic response for
-   unknown and known emails alike.
-4. **No rate limiting** — codes can be requested/attempted without bound.
+2. **No rate limiting** — codes can be requested/attempted without bound.
    Add per-email/IP throttling and an attempt limit per token.
-5. **Expired tokens accumulate** — add a cleanup job (e.g. delete
+3. **Expired tokens accumulate** — add a cleanup job (e.g. delete
    `expires_at < now - retention`).
-6. **Error signaling** — exceptions (`KeyNotFoundException`,
-   `UnauthorizedAccessException`) are used for expected failures; a
-   `Result<T>`-style outcome would map more cleanly onto HTTP 404/400/401.
-7. **No session/JWT** — `AuthResponse` currently returns only the user
+4. **No session/JWT** — `AuthResponse` currently returns only the user
    profile (with roles); issuing a token is a planned follow-up.
-
-## Planned next steps
-
-- `AuthController` exposing `POST /auth/request-code` and
-  `POST /auth/verify-code`.
-- Real email provider behind an interface (the service currently logs).
-- JWT issuance on successful verify + `[Authorize]` on protected endpoints
-  (replacing the `CurrentUserId`/`IsAdmin` constants in `RecipeController`).
-- Rate limiting and token-attempt limits.

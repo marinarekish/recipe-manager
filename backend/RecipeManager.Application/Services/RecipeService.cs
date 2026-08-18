@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Recipes;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Domain.Entities;
@@ -24,18 +25,22 @@ public class RecipeService(
             .ToListAsync(ct);
     }
 
-    public async Task<RecipeResponse?> GetRecipeByIdAsync(
+    public async Task<Result<RecipeResponse>> GetRecipeByIdAsync(
         int recipeId,
         CancellationToken ct = default)
     {
-        return await context.Recipes
+        var recipe = await context.Recipes
             .AsNoTracking()
             .Where(r => r.RecipeId == recipeId)
             .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+
+        return recipe is null
+            ? Result<RecipeResponse>.NotFound()
+            : Result<RecipeResponse>.Ok(recipe);
     }
 
-    public async Task<List<RecipeResponse>?> GetAllRecipesByUserIdAsync(
+    public async Task<Result<List<RecipeResponse>>> GetAllRecipesByUserIdAsync(
         int authorId,
         CancellationToken ct = default)
     {
@@ -44,16 +49,18 @@ public class RecipeService(
             .AnyAsync(u => u.UserId == authorId, ct);
 
         if (!authorExists)
-            return null;
+            return Result<List<RecipeResponse>>.NotFound();
 
-        return await context.Recipes
+        var recipes = await context.Recipes
             .AsNoTracking()
             .Where(r => r.AuthorId == authorId)
             .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
             .ToListAsync(ct);
+
+        return Result<List<RecipeResponse>>.Ok(recipes);
     }
 
-    public async Task<RecipeResponse?> CreateRecipeAsync(
+    public async Task<Result<RecipeResponse>> CreateRecipeAsync(
         int authorId,
         CreateRecipeRequest recipe,
         CancellationToken ct = default)
@@ -63,49 +70,58 @@ public class RecipeService(
             .AnyAsync(u => u.UserId == authorId, ct);
 
         if (!authorExists)
-            return null;
+            return Result<RecipeResponse>.NotFound();
 
-        var recipeToAdd = mapper.Map<Recipe>(recipe);
-
-        recipeToAdd.AuthorId = authorId;
-        recipeToAdd.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
-        recipeToAdd.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
-        recipeToAdd.CreatedAt = DateTime.UtcNow;
-        recipeToAdd.UpdatedAt = DateTime.UtcNow;
-
-        var ingredientIds = new HashSet<int>();
-
-        foreach (var item in recipe.Ingredients)
+        try
         {
-            var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+            var recipeToAdd = mapper.Map<Recipe>(recipe);
 
-            if (!ingredientIds.Add(ingredientId))
-                throw new ArgumentException(
-                    $"Duplicate ingredient in request (id={ingredientId}).");
+            recipeToAdd.AuthorId = authorId;
+            recipeToAdd.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
+            recipeToAdd.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
+            recipeToAdd.CreatedAt = DateTime.UtcNow;
+            recipeToAdd.UpdatedAt = DateTime.UtcNow;
 
-            recipeToAdd.RecipeIngredients.Add(new RecipeIngredient
+            var ingredientIds = new HashSet<int>();
+
+            foreach (var item in recipe.Ingredients)
             {
-                IngredientId = ingredientId,
-                Amount = item.Amount,
-                Unit = item.Unit
-            });
+                var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
+                if (!ingredientIds.Add(ingredientId))
+                    return Result<RecipeResponse>.ValidationError(
+                        $"Duplicate ingredient in request (id={ingredientId}).");
+
+                recipeToAdd.RecipeIngredients.Add(new RecipeIngredient
+                {
+                    IngredientId = ingredientId,
+                    Amount = item.Amount,
+                    Unit = item.Unit
+                });
+            }
+
+            context.Recipes.Add(recipeToAdd);
+            await context.SaveChangesAsync(ct);
+
+            var createdRecipe = await context.Recipes
+                .AsNoTracking()
+                .Where(r => r.RecipeId == recipeToAdd.RecipeId)
+                .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+
+            return Result<RecipeResponse>.Ok(createdRecipe!);
         }
-
-        context.Recipes.Add(recipeToAdd);
-        await context.SaveChangesAsync(ct);
-
-        return await context.Recipes
-            .AsNoTracking()
-            .Where(r => r.RecipeId == recipeToAdd.RecipeId)
-            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(ct);
+        catch (ArgumentException ex)
+        {
+            return Result<RecipeResponse>.ValidationError(ex.Message);
+        }
     }
 
     /// <summary>
     /// Updates a recipe by id. Ownership is enforced here:
     /// a non-admin can only update their own recipes.
     /// </summary>
-    public async Task<RecipeUpdateResult> UpdateRecipeAsync(
+    public async Task<Result<RecipeResponse>> UpdateRecipeAsync(
         int recipeId,
         int currentUserId,
         bool isAdmin,
@@ -117,71 +133,78 @@ public class RecipeService(
             .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
 
         if (recipeToUpdate is null)
-            return new RecipeUpdateResult(RecipeOperationStatus.NotFound, null);
+            return Result<RecipeResponse>.NotFound();
 
         if (!isAdmin && recipeToUpdate.AuthorId != currentUserId)
-            return new RecipeUpdateResult(RecipeOperationStatus.Forbidden, null);
+            return Result<RecipeResponse>.Forbidden();
 
-        // Partial update: only non-null scalars (safer than relying only on AutoMapper)
-        if (recipe.Title is not null)
-            recipeToUpdate.Title = recipe.Title;
-        if (recipe.PrepTimeMinutes is not null)
-            recipeToUpdate.PrepTimeMinutes = recipe.PrepTimeMinutes.Value;
-        if (recipe.CookTimeMinutes is not null)
-            recipeToUpdate.CookTimeMinutes = recipe.CookTimeMinutes.Value;
-        if (recipe.Servings is not null)
-            recipeToUpdate.Servings = recipe.Servings.Value;
-        if (recipe.Instructions is not null)
-            recipeToUpdate.Instructions = recipe.Instructions;
-
-        if (recipe.CuisineId is not null || !string.IsNullOrWhiteSpace(recipe.CuisineName))
-            recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
-
-        if (recipe.CategoryId is not null || !string.IsNullOrWhiteSpace(recipe.CategoryName))
-            recipeToUpdate.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
-        
-        recipeToUpdate.UpdatedAt = DateTime.UtcNow;
-
-        if (recipe.Ingredients is not null)
+        try
         {
-            recipeToUpdate.RecipeIngredients.Clear();
+            // Partial update: only non-null scalars (safer than relying only on AutoMapper)
+            if (recipe.Title is not null)
+                recipeToUpdate.Title = recipe.Title;
+            if (recipe.PrepTimeMinutes is not null)
+                recipeToUpdate.PrepTimeMinutes = recipe.PrepTimeMinutes.Value;
+            if (recipe.CookTimeMinutes is not null)
+                recipeToUpdate.CookTimeMinutes = recipe.CookTimeMinutes.Value;
+            if (recipe.Servings is not null)
+                recipeToUpdate.Servings = recipe.Servings.Value;
+            if (recipe.Instructions is not null)
+                recipeToUpdate.Instructions = recipe.Instructions;
 
-            var ingredientIds = new HashSet<int>();
+            if (recipe.CuisineId is not null || !string.IsNullOrWhiteSpace(recipe.CuisineName))
+                recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
 
-            foreach (var item in recipe.Ingredients)
+            if (recipe.CategoryId is not null || !string.IsNullOrWhiteSpace(recipe.CategoryName))
+                recipeToUpdate.CategoryId = await ResolveCategoryIdAsync(recipe.CategoryId, recipe.CategoryName, ct);
+            
+            recipeToUpdate.UpdatedAt = DateTime.UtcNow;
+
+            if (recipe.Ingredients is not null)
             {
-                var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+                recipeToUpdate.RecipeIngredients.Clear();
 
-                if (!ingredientIds.Add(ingredientId))
-                    throw new ArgumentException(
-                        $"Duplicate ingredient in request (id={ingredientId}).");
+                var ingredientIds = new HashSet<int>();
 
-                recipeToUpdate.RecipeIngredients.Add(new RecipeIngredient
+                foreach (var item in recipe.Ingredients)
                 {
-                    RecipeId = recipeId,
-                    IngredientId = ingredientId,
-                    Amount = item.Amount,
-                    Unit = item.Unit
-                });
+                    var ingredientId = await ResolveIngredientIdAsync(item.IngredientId, item.Name, ct);
+
+                    if (!ingredientIds.Add(ingredientId))
+                        return Result<RecipeResponse>.ValidationError(
+                            $"Duplicate ingredient in request (id={ingredientId}).");
+
+                    recipeToUpdate.RecipeIngredients.Add(new RecipeIngredient
+                    {
+                        RecipeId = recipeId,
+                        IngredientId = ingredientId,
+                        Amount = item.Amount,
+                        Unit = item.Unit
+                    });
+                }
             }
+
+            await context.SaveChangesAsync(ct);
+
+            var updatedRecipe = await context.Recipes
+                .AsNoTracking()
+                .Where(r => r.RecipeId == recipeId)
+                .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+
+            return Result<RecipeResponse>.Ok(updatedRecipe!);
         }
-
-        await context.SaveChangesAsync(ct);
-
-        var updatedRecipe = await context.Recipes
-            .AsNoTracking()
-            .Where(r => r.RecipeId == recipeId)
-            .ProjectTo<RecipeResponse>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(ct);
-
-        return new RecipeUpdateResult(RecipeOperationStatus.Ok, updatedRecipe);
+        catch (ArgumentException ex)
+        {
+            return Result<RecipeResponse>.ValidationError(ex.Message);
+        }
     }
 
     /// <summary>
     /// Deletes a recipe by id. Ownership is enforced here:
     /// a non-admin can only delete their own recipes.
     /// </summary>
-    public async Task<RecipeOperationStatus> DeleteRecipeAsync(
+    public async Task<Result> DeleteRecipeAsync(
         int recipeId,
         int currentUserId,
         bool isAdmin,
@@ -191,15 +214,15 @@ public class RecipeService(
             .FirstOrDefaultAsync(r => r.RecipeId == recipeId, ct);
 
         if (recipeToDelete is null)
-            return RecipeOperationStatus.NotFound;
+            return Result.NotFound();
 
         if (!isAdmin && recipeToDelete.AuthorId != currentUserId)
-            return RecipeOperationStatus.Forbidden;
+            return Result.Forbidden();
 
         context.Recipes.Remove(recipeToDelete);
         await context.SaveChangesAsync(ct);
 
-        return RecipeOperationStatus.Ok;
+        return Result.Ok();
     }
 
     /// <summary>
@@ -225,8 +248,8 @@ public class RecipeService(
 
         if (!string.IsNullOrWhiteSpace(cuisineName))
         {
-            var cuisine = await cuisineService.GetOrCreateAsync(cuisineName, ct);
-            return cuisine!.CuisineId;
+            var result = await cuisineService.GetOrCreateAsync(cuisineName, ct);
+            return result.Value!.CuisineId;
         }
 
         throw new ArgumentException("Cuisine must be provided as an id or a name.");
@@ -255,8 +278,8 @@ public class RecipeService(
 
         if (!string.IsNullOrWhiteSpace(categoryName))
         {
-            var category = await categoryService.GetOrCreateAsync(categoryName, ct);
-            return category!.CategoryId;
+            var result = await categoryService.GetOrCreateAsync(categoryName, ct);
+            return result.Value!.CategoryId;
         }
 
         throw new ArgumentException("Category must be provided as an id or a name.");
@@ -286,7 +309,7 @@ public class RecipeService(
         if (string.IsNullOrWhiteSpace(ingredientName))
             throw new ArgumentException("Ingredient must be provided as an id or a name.");
         
-        var ingredient = await ingredientService.GetOrCreateAsync(ingredientName, ct);
-        return ingredient!.IngredientId;
+        var result = await ingredientService.GetOrCreateAsync(ingredientName, ct);
+        return result.Value!.IngredientId;
     }
 }

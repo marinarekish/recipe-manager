@@ -1,3 +1,4 @@
+using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Recipes;
 
 namespace RecipeManager.Application.Interfaces;
@@ -7,27 +8,27 @@ public interface IRecipeService
     Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
         CancellationToken ct = default);
 
-    Task<RecipeResponse?> GetRecipeByIdAsync(
+    Task<Result<RecipeResponse>> GetRecipeByIdAsync(
         int recipeId,
         CancellationToken ct = default);
 
-    Task<List<RecipeResponse>?> GetAllRecipesByUserIdAsync(
+    Task<Result<List<RecipeResponse>>> GetAllRecipesByUserIdAsync(
         int authorId,
         CancellationToken ct = default);
 
-    Task<RecipeResponse?> CreateRecipeAsync(
+    Task<Result<RecipeResponse>> CreateRecipeAsync(
         int authorId,
         CreateRecipeRequest recipe,
         CancellationToken ct = default);
 
-    Task<RecipeUpdateResult> UpdateRecipeAsync(
+    Task<Result<RecipeResponse>> UpdateRecipeAsync(
         int recipeId,
         int currentUserId,
         bool isAdmin,
         UpdateRecipeRequest recipe,
         CancellationToken ct = default);
 
-    Task<RecipeOperationStatus> DeleteRecipeAsync(
+    Task<Result> DeleteRecipeAsync(
         int recipeId,
         int currentUserId,
         bool isAdmin,
