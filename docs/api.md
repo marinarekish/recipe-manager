@@ -9,17 +9,20 @@ the full mapping.
 
 ---
 
-## Authorization (current stub)
+## Authorization
 
-Every controller uses two compile-time constants until JWT lands:
+All endpoints require a valid JWT Bearer token except `/api/auth/*`.
+Admin-only endpoints use `[Authorize(Roles = "Administrator")]`.
 
-```csharp
-private const int CurrentUserId = 1; // switch for manual testing
-private const bool IsAdmin = true;   // true = Admin, false = User
+Obtain a token via `POST /api/auth/verify-code`, then pass it in the
+`Authorization` header:
+
+```
+Authorization: Bearer {token}
 ```
 
-Switch the constants in each controller to test as a regular user. There
-is no `[Authorize]` yet; every request is treated as authenticated.
+User identity is derived from JWT claims (`sub` = userId, `role` = role).
+No `[Authorize]` means anonymous access (auth endpoints only).
 
 ---
 
@@ -44,7 +47,8 @@ Request:
 
 ### `POST /api/auth/verify-code`
 
-Verifies the code and returns the authenticated user profile.
+Verifies the code, returns the authenticated user profile and a JWT access
+token.
 
 Request:
 
@@ -52,7 +56,7 @@ Request:
 { "email": "user@example.com", "code": "123456" }
 ```
 
-- **200** — `AuthResponse`
+- **200** — `AuthResponse` (includes access token)
 - **401** — code invalid or expired
 - **404** — email not found
 
@@ -68,9 +72,14 @@ Request:
     "phone": null,
     "roles": [{ "roleId": 1, "name": "Administrator" }],
     "createdAt": "2026-08-11T15:00:00Z"
-  }
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresIn": 3600
 }
 ```
+
+Use `accessToken` in the `Authorization: Bearer {token}` header for all
+subsequent requests.
 
 ---
 
@@ -132,16 +141,19 @@ Same contract as categories:
 Admin only. Returns every recipe.
 
 - **200** — `List<RecipeResponse>`
+- **401** — no token / invalid token
 - **403** — non-admin
 
 ### `GET /api/recipes/me`
 Returns the current user's recipes.
 
 - **200** — `List<RecipeResponse>`
+- **401** — no token / invalid token
 - **404** — current user does not exist in DB
 
 ### `GET /api/recipes/{id}`  (`id` must be an integer)
 - **200** — `RecipeResponse`
+- **401** — no token / invalid token
 - **403** — recipe exists but belongs to another user (non-admin)
 - **404** — not found
 
@@ -178,6 +190,7 @@ Validation: `title` required; `ingredients` required (≥ 1 item);
 
 - **201** — `RecipeResponse` with `Location` header
   (`GET /api/recipes/{id}`)
+- **401** — no token / invalid token
 - **404** — current user does not exist
 - **400** — validation failure, or a cuisine/category/ingredient
   missing both id and name
@@ -199,6 +212,7 @@ id-or-name fallback as `POST` when provided:
 ```
 
 - **200** — `RecipeResponse`
+- **401** — no token / invalid token
 - **403** — recipe exists but belongs to another user (non-admin)
 - **404** — not found
 - **400** — validation failure, or a cuisine/category/ingredient
@@ -206,6 +220,7 @@ id-or-name fallback as `POST` when provided:
 
 ### `DELETE /api/recipes/{id}`
 - **204** — deleted
+- **401** — no token / invalid token
 - **403** — recipe exists but belongs to another user (non-admin)
 - **404** — not found
 
@@ -217,6 +232,7 @@ id-or-name fallback as `POST` when provided:
 Returns the current user's favorite recipes.
 
 - **200** — `List<FavoriteRecipeResponse>`
+- **401** — no token / invalid token
 
 ### `POST /api/favorites`
 Adds a recipe to the current user's favorites.
@@ -228,6 +244,7 @@ Request:
 ```
 
 - **201** — `FavoriteRecipeResponse`
+- **401** — no token / invalid token
 - **404** — recipe not found
 - **409** — recipe already in favorites
 
@@ -235,6 +252,7 @@ Request:
 Removes a recipe from the current user's favorites.
 
 - **204** — removed
+- **401** — no token / invalid token
 - **404** — favorite not found
 
 `FavoriteRecipeResponse`:
@@ -255,6 +273,7 @@ Removes a recipe from the current user's favorites.
 Returns the current user's profile (includes roles).
 
 - **200** — `UserResponse`
+- **401** — no token / invalid token
 - **404** — current user does not exist in DB
 
 ### `PUT /api/users/me`
@@ -273,18 +292,21 @@ Request (`UpdateUserRequest`):
 
 - **200** — `UserResponse`
 - **400** — email already used by another user
+- **401** — no token / invalid token
 - **404** — current user does not exist
 
 ### `GET /api/users`
 Admin only. Lists all users.
 
 - **200** — `List<UserResponse>`
+- **401** — no token / invalid token
 - **403** — non-admin
 
 ### `GET /api/users/{id}`
 Admin only.
 
 - **200** — `UserResponse`
+- **401** — no token / invalid token
 - **403** — non-admin
 - **404** — not found
 
@@ -301,6 +323,7 @@ Request (`AssignRoleRequest`):
 
 - **200** — `UserResponse`
 - **400** — would remove the role from the last administrator
+- **401** — no token / invalid token
 - **403** — non-admin
 - **404** — user or role not found
 
