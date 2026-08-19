@@ -66,4 +66,25 @@ public class IngredientService(
 
         return Result<IngredientResponse>.Ok(mapper.Map<IngredientResponse>(ingredient));
     }
+
+    public async Task<Result> DeleteIngredientAsync(int id, CancellationToken ct = default)
+    {
+        var ingredientToDelete = await context.Ingredients
+            .FirstOrDefaultAsync(i => i.IngredientId == id, ct);
+
+        if (ingredientToDelete is null)
+            return Result.NotFound();
+
+        var inUse = await context.RecipeIngredients
+            .AsNoTracking()
+            .AnyAsync(ri => ri.IngredientId == id, ct);
+
+        if (inUse)
+            return Result.Conflict("Ingredient is used by one or more recipes.");
+
+        context.Ingredients.Remove(ingredientToDelete);
+        await context.SaveChangesAsync(ct);
+
+        return Result.NoContent(); 
+    }
 }

@@ -15,4 +15,9 @@ public interface ICategoryService
     Task<Result<CategoryResponse>> GetOrCreateAsync(
         string name,
         CancellationToken ct = default);
+    
+    // Admin only
+    Task<Result> DeleteCategoryAsync(
+        int id, 
+        CancellationToken ct = default);
 }

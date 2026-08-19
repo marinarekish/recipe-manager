@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Categories;
@@ -36,6 +37,18 @@ public class CategoryController(
         return result.ToActionResult();
     }
 
-    // Update and Delete are out of scope.
-    // Users cannot modify or remove shared reference data.
+    [HttpDelete("{id}", Name = "DeleteCategory")]
+    [Authorize(Roles = "Administrator")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteCategory(
+        int id,
+        CancellationToken ct = default)
+    {
+        var result = await categoryService.DeleteCategoryAsync(id, ct);
+        return result.ToActionResult();
+    }
 }

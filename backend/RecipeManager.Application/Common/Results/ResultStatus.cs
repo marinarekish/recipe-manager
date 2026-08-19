@@ -4,6 +4,7 @@ public enum ResultStatus
 {
     Ok,
     NotFound,
+    NoContent,
     ValidationError,
     Conflict,
     Forbidden,

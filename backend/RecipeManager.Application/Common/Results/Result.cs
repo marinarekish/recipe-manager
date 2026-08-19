@@ -24,6 +24,7 @@ public class Result
 
     public static Result Ok() => new(ResultStatus.Ok);
     public static Result NotFound(string? message = null) => new(ResultStatus.NotFound, message);
+    public static Result NoContent() => new (ResultStatus.NoContent);
     public static Result ValidationError(string message) => new(ResultStatus.ValidationError, message);
     public static Result ValidationError(IEnumerable<string> errors) => new(ResultStatus.ValidationError, errors);
     public static Result Conflict(string? message = null) => new(ResultStatus.Conflict, message);
