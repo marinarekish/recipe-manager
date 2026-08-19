@@ -66,4 +66,33 @@ public class CategoryService(
 
         return Result<CategoryResponse>.Ok(mapper.Map<CategoryResponse>(category));
     }
+
+    public async Task<Result> DeleteCategoryAsync(int id, CancellationToken ct = default)
+    {
+        var categoryToDelete = await context.Categories
+            .FirstOrDefaultAsync(c => c.CategoryId == id, ct);
+
+        if (categoryToDelete is null)
+            return Result.NotFound();
+
+        var inUse = await context.Recipes
+            .AsNoTracking()
+            .AnyAsync(r => r.CategoryId == id, ct);
+
+        if (inUse)
+            return Result.Conflict("Category is used by one or more recipes.");
+
+        context.Categories.Remove(categoryToDelete);
+
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Conflict("Category is used by one or more recipes.");
+        }
+
+        return Result.NoContent();
+    }
 }

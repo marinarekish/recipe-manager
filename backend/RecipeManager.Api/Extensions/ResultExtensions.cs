@@ -10,18 +10,25 @@ public static class ResultExtensions
         return result.Status switch
         {
             ResultStatus.Ok => new OkResult(),
+            
             ResultStatus.NotFound => result.ErrorMessage is not null
                 ? new NotFoundObjectResult(new { message = result.ErrorMessage })
                 : new NotFoundResult(),
+            
+            ResultStatus.NoContent => new NoContentResult(),
+            
             ResultStatus.ValidationError => new BadRequestObjectResult(
                 new
                 {
                     message = result.ErrorMessage ?? "Validation failed",
                     errors = result.Errors
                 }),
+            
             ResultStatus.Conflict => new ConflictObjectResult(
                 new { message = result.ErrorMessage }),
+            
             ResultStatus.Forbidden => new ForbidResult(),
+            
             ResultStatus.Unauthorized => new UnauthorizedResult(),
             _ => new StatusCodeResult(500)
         };

@@ -66,4 +66,33 @@ public class CuisineService(
 
         return Result<CuisineResponse>.Ok(mapper.Map<CuisineResponse>(cuisine));
     }
+
+    public async Task<Result> DeleteCuisineAsync(int id, CancellationToken ct = default)
+    {
+        var cuisineToDelete = await context.Cuisines
+            .FirstOrDefaultAsync(c => c.CuisineId == id, ct);
+
+        if (cuisineToDelete is null)
+            return Result.NotFound();
+
+        var inUse = await context.Recipes
+            .AsNoTracking()
+            .AnyAsync(r => r.CuisineId == id, ct);
+
+        if (inUse)
+            return Result.Conflict("Cuisine is used by one or more recipes.");
+
+        context.Cuisines.Remove(cuisineToDelete);
+
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Conflict("Cuisine is used by one or more recipes.");
+        }
+
+        return Result.NoContent();
+    }
 }

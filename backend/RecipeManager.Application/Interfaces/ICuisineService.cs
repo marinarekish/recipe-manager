@@ -15,4 +15,9 @@ public interface ICuisineService
     Task<Result<CuisineResponse>> GetOrCreateAsync(
         string name,
         CancellationToken ct = default);
+    
+    // Admin only
+    Task<Result> DeleteCuisineAsync(
+        int id, 
+        CancellationToken ct = default);
 }
