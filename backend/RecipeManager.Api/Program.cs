@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using Microsoft.OpenApi.Models;
 using RecipeManager.Application.Common.Settings;
 using RecipeManager.Application.Interfaces;
 using RecipeManager.Application.Mapping;
 using RecipeManager.Application.Services;
+using RecipeManager.Api.Services;
 using RecipeManager.Infrastructure.Persistence;
 
 public class Program
@@ -32,18 +32,11 @@ public class Program
                 Description = "Paste the JWT from verify-code: Bearer {token}"
             });
 
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
+                    new OpenApiSecuritySchemeReference("Bearer", doc),
+                    Array.Empty<string>().ToList()
                 }
             });
         });
@@ -80,6 +73,7 @@ public class Program
 
         builder.Services.AddAuthorization();
 
+        builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<ILoginCodeService, LoginCodeService>();
         builder.Services.AddScoped<IUserService, UserService>();
