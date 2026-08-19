@@ -83,8 +83,16 @@ public class CuisineService(
             return Result.Conflict("Cuisine is used by one or more recipes.");
 
         context.Cuisines.Remove(cuisineToDelete);
-        await context.SaveChangesAsync(ct);
 
-        return Result.NoContent(); 
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Conflict("Cuisine is used by one or more recipes.");
+        }
+
+        return Result.NoContent();
     }
 }

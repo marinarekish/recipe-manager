@@ -83,8 +83,16 @@ public class CategoryService(
             return Result.Conflict("Category is used by one or more recipes.");
 
         context.Categories.Remove(categoryToDelete);
-        await context.SaveChangesAsync(ct);
 
-        return Result.NoContent(); 
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Conflict("Category is used by one or more recipes.");
+        }
+
+        return Result.NoContent();
     }
 }

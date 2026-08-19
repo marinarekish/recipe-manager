@@ -83,8 +83,16 @@ public class IngredientService(
             return Result.Conflict("Ingredient is used by one or more recipes.");
 
         context.Ingredients.Remove(ingredientToDelete);
-        await context.SaveChangesAsync(ct);
 
-        return Result.NoContent(); 
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Conflict("Ingredient is used by one or more recipes.");
+        }
+
+        return Result.NoContent();
     }
 }

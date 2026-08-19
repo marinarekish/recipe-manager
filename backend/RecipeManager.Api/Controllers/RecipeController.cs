@@ -114,6 +114,6 @@ public class RecipeController(
         CancellationToken ct = default)
     {
         var result = await recipeService.DeleteRecipeAsync(id, CurrentUserId, IsAdmin, ct);
-        return result.IsSuccess ? NoContent() : result.ToActionResult();
+        return result.ToActionResult();
     }
 }
