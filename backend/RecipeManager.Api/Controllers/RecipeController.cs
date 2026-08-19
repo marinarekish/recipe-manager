@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecipeManager.Api.Extensions;
-using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Recipes;
 using RecipeManager.Application.Interfaces;
 

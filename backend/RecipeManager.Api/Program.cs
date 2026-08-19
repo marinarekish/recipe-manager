@@ -17,6 +17,18 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddControllers();
+        
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("FrontendDevelopment", policy =>
+            {
+                policy
+                    .WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+        
         builder.Services.AddEndpointsApiExplorer();
 
         builder.Services.AddSwaggerGen(options =>
@@ -97,7 +109,9 @@ public class Program
         
         app.UseHttpsRedirection();
 
-        app.UseAuthentication(); // must run before UseAuthorization
+        app.UseCors("FrontendDevelopment");
+
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
