@@ -46,3 +46,6 @@ dist/
 
 # Claude
 CLAUDE.md
+
+# Dev
+**/appsettings.Development.json
