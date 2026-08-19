@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Common.Results;
@@ -8,30 +10,39 @@ namespace RecipeManager.Api.Controllers;
 
 [ApiController]
 [Route("api/recipes")]
-public class RecipeController (
+[Authorize]
+public class RecipeController(
     IRecipeService recipeService) : ControllerBase
 {
-    // Temporary stubs until JWT is ready
-    private const int CurrentUserId = 1; // switch for manual testing
-    private const bool IsAdmin = true;   // true = Admin, false = User
-    
-    // private const int CurrentUserId = 2; // switch for manual testing
-    // private const bool IsAdmin = false;   // true = Admin, false = User
+    private int CurrentUserId
+    {
+        get
+        {
+            var value =
+                User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub")
+                ?? throw new InvalidOperationException("User id claim is missing.");
+
+            return int.Parse(value);
+        }
+    }
+
+    private bool IsAdmin => User.IsInRole("Administrator");
 
     [HttpGet]
+    [Authorize(Roles = "Administrator")]
     [ProducesResponseType(typeof(List<RecipeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<List<RecipeResponse>>> GetAllByAdmin(CancellationToken ct = default)
     {
-        if (!IsAdmin)
-            return Forbid();
-
         var recipes = await recipeService.GetAllRecipesByAdminAsync(ct);
         return Ok(recipes);
     }
 
     [HttpGet("me")]
     [ProducesResponseType(typeof(List<RecipeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAllByUser(CancellationToken ct = default)
     {
@@ -41,10 +52,11 @@ public class RecipeController (
 
     [HttpGet("{id:int}", Name = "GetRecipeById")]
     [ProducesResponseType(typeof(RecipeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRecipeById(
-        int id, 
+        int id,
         CancellationToken ct = default)
     {
         var result = await recipeService.GetRecipeByIdAsync(id, ct);
@@ -61,6 +73,7 @@ public class RecipeController (
     [HttpPost]
     [ProducesResponseType(typeof(RecipeResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateRecipe(
         [FromBody] CreateRecipeRequest recipeRequest,
@@ -77,6 +90,7 @@ public class RecipeController (
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(RecipeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateRecipe(
@@ -92,6 +106,7 @@ public class RecipeController (
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteRecipe(

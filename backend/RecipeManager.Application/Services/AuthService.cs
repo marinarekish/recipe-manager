@@ -12,6 +12,7 @@ namespace RecipeManager.Application.Services;
 public class AuthService(
     ApplicationDbContext context,
     ILoginCodeService loginCodeService,
+    IJwtTokenService jwtTokenService,
     IMapper mapper,
     ILogger<AuthService> logger) : IAuthService
 {
@@ -109,6 +110,13 @@ public class AuthService(
 
         var userResponse = mapper.Map<Application.Contracts.Users.UserResponse>(user);
 
-        return Result<AuthResponse>.Ok(new AuthResponse(userResponse));
+        var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+        var (token, expiresAt) = jwtTokenService.CreateToken(
+            user.UserId, user.Email, roles);
+
+        var expiresIn = (int)(expiresAt - DateTime.UtcNow).TotalSeconds;
+
+        return Result<AuthResponse>.Ok(
+            new AuthResponse(userResponse, token, expiresIn));
     }
 }

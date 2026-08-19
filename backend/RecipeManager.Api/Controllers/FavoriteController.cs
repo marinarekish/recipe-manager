@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Favorites;
@@ -7,13 +9,25 @@ namespace RecipeManager.Api.Controllers;
 
 [ApiController]
 [Route("api/favorites")]
+[Authorize]
 public class FavoriteController(IFavoriteService favoriteService) : ControllerBase
 {
-    // Temporary stubs until JWT is ready
-    private const int CurrentUserId = 1;
-    
+    private int CurrentUserId
+    {
+        get
+        {
+            var value =
+                User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub")
+                ?? throw new InvalidOperationException("User id claim is missing.");
+
+            return int.Parse(value);
+        }
+    }
+
     [HttpGet(Name = "GetFavorites")]
     [ProducesResponseType(typeof(List<FavoriteRecipeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<FavoriteRecipeResponse>>> GetFavorites(
         CancellationToken ct = default)
     {
@@ -22,10 +36,11 @@ public class FavoriteController(IFavoriteService favoriteService) : ControllerBa
     }
 
     [HttpPost(Name = "AddFavorite")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(FavoriteRecipeResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> AddFavoriteAsync(
+    public async Task<IActionResult> AddFavorite(
         [FromBody] CreateFavoriteRequest request,
         CancellationToken ct = default)
     {
@@ -38,12 +53,19 @@ public class FavoriteController(IFavoriteService favoriteService) : ControllerBa
         return CreatedAtRoute("GetFavorites", result.Value);
     }
 
-    [HttpDelete("{id:int}", Name = "DeleteFavorite")]
+    [HttpDelete("{recipeId:int}", Name = "DeleteFavorite")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteFavoriteAsync(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteFavorite(
+        int recipeId,
+        CancellationToken ct = default)
     {
-        var result = await favoriteService.RemoveFavoriteAsync(CurrentUserId, id, ct);
-        return result.IsSuccess ? NoContent() : result.ToActionResult();
+        var result = await favoriteService.RemoveFavoriteAsync(
+            CurrentUserId, recipeId, ct);
+
+        return result.IsSuccess
+            ? NoContent()
+            : result.ToActionResult();
     }
 }

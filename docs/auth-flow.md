@@ -22,7 +22,8 @@ Client                         Server (AuthService)
   |------------------------------------------>| 6. find latest active token for user
   |                                           | 7. verify code hash (constant-time)
   |                                           | 8. mark token used
-  |   <----- AuthResponse (User + roles) -----| 9. return user profile
+  |                                           | 9. create JWT (sub, email, role claims)
+  |   <----- AuthResponse (User + JWT) -------| 10. return user profile + access token
 ```
 
 ## Data model — `LoginToken`
@@ -40,7 +41,7 @@ A token is **valid** only while: `used_at IS NULL` and `expires_at > now`.
 
 Indexes exist on `user_id`, `code_hash`, and `expires_at`.
 
-## Implementation details (`AuthService`, `LoginCodeService`)
+## Implementation details (`AuthService`, `LoginCodeService`, `JwtTokenService`)
 
 - **Code generation** — cryptographically random 6 digits:
   `RandomNumberGenerator.GetInt32(100_000, 1_000_000)`.
@@ -53,6 +54,10 @@ Indexes exist on `user_id`, `code_hash`, and `expires_at`.
 - **Case/whitespace normalization** — email is `Trim().ToLowerInvariant()`
   on both request and verify.
 - **Lifetime** — `LoginCodeLifetimeMinutes = 10`.
+- **JWT issuance** — `JwtTokenService` creates a signed JWT with `sub`
+  (userId), `email`, and `role` claims. Configurable via `Jwt` section
+  in `appsettings.json` (issuer, audience, key, expiration). Default
+  expiration is 60 minutes.
 
 ## Error signaling
 
@@ -77,5 +82,6 @@ See `result-convention.md` for the full mapping.
    Add per-email/IP throttling and an attempt limit per token.
 3. **Expired tokens accumulate** — add a cleanup job (e.g. delete
    `expires_at < now - retention`).
-4. **No session/JWT** — `AuthResponse` currently returns only the user
-   profile (with roles); issuing a token is a planned follow-up.
+4. **No refresh tokens** — access tokens expire after the configured
+   `ExpirationMinutes` (default 60). Users must re-authenticate with a
+   new login code.
