@@ -1,8 +1,9 @@
 # Recipe Manager — REST API Contract
 
 All endpoints are served under `/api` by the `RecipeManager.Api` project.
-JSON is used for request/response bodies. Property names are serialized in
-PascalCase by default.
+JSON is used for request/response bodies. Property names use **camelCase**
+(configured via `JsonNamingPolicy.CamelCase` in `Program.cs`). C# DTO
+property names remain PascalCase; the serializer handles the conversion.
 
 Error responses use the Result pattern — see `result-convention.md` for
 the full mapping.
