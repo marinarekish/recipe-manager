@@ -27,6 +27,7 @@
 # Node
 # ===========================
 frontend/node_modules/
+frontend/.angular/
 
 # Logs
 npm-debug.log*
