@@ -1,61 +1,98 @@
 # Frontend — Local Setup & Development Runbook
 
-How to get the Angular SPA running locally against the backend API.
+How to get the Angular SPA running locally against the backend API,
+including database, auth, and data prerequisites.
 
-## Stack
+## Ports & URLs
 
-- **Angular 19** (standalone application, no NgModules)
-- **TypeScript 5.7**
-- **Angular Router** (`provideRouter`)
-- **Angular Material + CDK** (azure-blue prebuilt theme)
-- **RxJS 7.8** (ships with Angular)
-- **SCSS** as the style language
-- **`provideHttpClient()`** wired in app config (no API calls yet)
+| Service    | URL                        | Notes                         |
+| ---------- | -------------------------- | ----------------------------- |
+| PostgreSQL | `localhost:5432`           | Default port                  |
+| API        | `http://localhost:5053`     | HTTP (see `launchSettings.json`) |
+| API (HTTPS)| `https://localhost:7151`   | Optional                      |
+| Swagger    | `http://localhost:5053/swagger` | Development only          |
+| Frontend   | `http://localhost:4200`     | Angular dev server (`ng serve`) |
+
+CORS is configured for `http://localhost:4200` (Angular) and
+`http://localhost:5173` (Vite, if used). See the [CORS section](#cors)
+below.
 
 ## Prerequisites
 
-- Node.js **≥ 18** (`node --version`)
-- npm **≥ 8** (`npm --version`)
+| Requirement | Version | Check |
+| ----------- | ------- | ----- |
+| .NET SDK    | 10.0    | `dotnet --version` |
+| Node.js     | ≥ 18    | `node --version` |
+| npm         | ≥ 8     | `npm --version` |
+| PostgreSQL  | recent  | Running on `localhost:5432` |
+| `dotnet-ef` | latest  | `dotnet tool install --global dotnet-ef` |
 
-## Install
+## How to run
+
+Start order: **database → API → frontend**.
+
+### 1. Database
+
+Ensure PostgreSQL is running on `localhost:5432`. Create the database
+and apply migrations (see `docs/backend-runbook.md` for full details):
 
 ```bash
-cd frontend
-npm install
+cd backend
+dotnet ef database update \
+  --project RecipeManager.Infrastructure \
+  --startup-project RecipeManager.Api
 ```
 
-## Run (development)
+### 2. Seed a user
+
+There is no public self-registration. A user must exist in the database
+to complete passwordless login. Insert one manually:
+
+```sql
+INSERT INTO users (first_name, last_name, email, created_at, updated_at)
+VALUES ('Admin', 'Admin', 'admin@example.com', now(), now());
+
+-- optionally grant the Administrator role
+INSERT INTO users_roles (user_id, role_id) VALUES (1, 1);
+```
+
+You can use any email — you will read the login code from the API logs,
+not from an inbox.
+
+### 3. Start the API
+
+```bash
+cd backend
+dotnet run --project RecipeManager.Api
+```
+
+The API starts at `http://localhost:5053`. Swagger UI is available at
+`/swagger` in Development.
+
+### 4. Start the frontend
 
 ```bash
 cd frontend
+npm install   # first time only
 ng serve
 ```
 
 Opens at **http://localhost:4200**.
 
-## Production build
+## API base URL configuration
 
-```bash
-cd frontend
-ng build
-```
-
-Output goes to `frontend/dist/recipe-manager-app/`.
-
-## API configuration
-
-The backend API base URL is configured in:
+The backend URL is configured in Angular environment files (not `.env`):
 
 ```
-src/environments/environment.ts          # production
-src/environments/environment.development.ts  # development (used by ng serve)
+frontend/src/environments/
+├── environment.ts                  # production  → http://localhost:5053
+└── environment.development.ts      # development → http://localhost:5053
 ```
 
-Both currently point to `http://localhost:5053` (the default backend URL — see `docs/backend-runbook.md`).
-
-File replacements in `angular.json` swap the environment file automatically:
-- `ng serve` → `environment.development.ts`
-- `ng build` → `environment.ts`
+Angular CLI swaps these automatically via `fileReplacements` in
+`angular.json`:
+- `ng serve` uses `environment.development.ts`
+- `ng build` uses `environment.ts`
 
 Import and use in services:
 
@@ -67,10 +104,123 @@ const url = `${environment.apiBaseUrl}/api/recipes`;
 
 > **Do not** hardcode the API URL in components or services.
 
+## Authentication (passwordless login)
+
+There is no password-based login. Users authenticate with an email
++ one-time 6-digit code. See `docs/auth-flow.md` for the full
+design.
+
+### Step 1 — Request a code
+
+```bash
+curl -X POST http://localhost:5053/api/auth/request-code \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com"}'
+```
+
+Response (200):
+
+```json
+{ "message": "If the account exists, a login code has been issued." }
+```
+
+### Step 2 — Read the code from API logs
+
+There is no email sender yet. The code is printed in the API's
+console output:
+
+```
+Login code for user@example.com: 482916
+```
+
+### Step 3 — Verify the code
+
+```bash
+curl -X POST http://localhost:5053/api/auth/verify-code \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "code": "482916"}'
+```
+
+Response (200):
+
+```json
+{
+  "user": {
+    "userId": 1,
+    "firstName": "Admin",
+    "lastName": "Admin",
+    "email": "admin@example.com",
+    "phone": null,
+    "roles": [{ "roleId": 1, "name": "Administrator" }],
+    "createdAt": "2026-08-11T15:00:00Z"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresIn": 3600
+}
+```
+
+### Step 4 — Use the token
+
+Send the `accessToken` on subsequent requests:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+Codes expire after 10 minutes. Requesting a new code invalidates
+all previous active codes for that user.
+
+## Data prerequisites
+
+| Requirement | How to satisfy |
+| ----------- | -------------- |
+| PostgreSQL running | Start PostgreSQL on `localhost:5432` |
+| Database created + migrations applied | `dotnet ef database update` (see above) |
+| At least one user in DB | Manual `INSERT` (see seed above) |
+| JWT key configured | `Jwt:Key` in `appsettings.Development.json` (≥ 32 chars) |
+
+### JWT settings
+
+JWT configuration lives in `appsettings.Development.json` (git-ignored).
+Copy the example if it does not exist:
+
+```bash
+cp backend/RecipeManager.Api/appsettings.Development.json.example \
+   backend/RecipeManager.Api/appsettings.Development.json
+```
+
+Then edit `Jwt:Key` to a random string of at least 32 characters.
+The `Issuer`, `Audience`, and `ExpirationMinutes` defaults are fine
+for local development.
+
+> **Never commit `appsettings.Development.json`** — it contains
+> secrets. The `.example` file has placeholder values only.
+
+## Contract notes
+
+- **JSON property names are camelCase.** C# DTO properties are
+  PascalCase; the serializer converts automatically
+  (`JsonNamingPolicy.CamelCase` in `Program.cs`).
+- Error responses use the Result pattern — see `docs/result-convention.md`.
+- Full API reference: **`docs/api.md`**
+- Auth flow details: **`docs/auth-flow.md`**
+
+## CORS
+
+The backend CORS policy (`"FrontendDevelopment"`) allows `http://localhost:4200`
+by default. Origins are configured in the `Cors:Origins` array in
+`appsettings.Development.json` (see `docs/backend-runbook.md`).
+
+Allowed headers: `Authorization`, `Content-Type`.
+Allowed methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`.
+
+If you change the Angular dev server port, add the new origin to that
+array.
+
 ## Folder structure
 
 ```
-src/
+frontend/src/
 ├── app/
 │   ├── core/          # future: auth, interceptors, app-wide services
 │   ├── shared/        # future: reusable UI components, pipes, directives
@@ -83,43 +233,38 @@ src/
 ├── environments/      # environment.ts / environment.development.ts
 ├── index.html
 ├── main.ts            # standalone bootstrap
-└── styles.scss        # global styles + Material theme imports
+└── styles.scss        # global styles + Material theme
 ```
 
-Empty directories (`core/`, `shared/`, `features/`) contain `.gitkeep` placeholders.
+Empty directories (`core/`, `shared/`, `features/`) contain `.gitkeep`
+placeholders.
 
-## Angular Material
+## Stack
 
-- Prebuilt theme: `azure-blue` (loaded via `angular.json` styles array)
-- Global font: Roboto (loaded via Google Fonts in `index.html`)
-- Material Icons available via `MaterialIcons` font (also in `index.html`)
-- SCSS setup: `styles.scss` imports `@angular/material` for future custom theming
-
-No Bootstrap, Tailwind, or other CSS frameworks.
+- **Angular 19** (standalone application, no NgModules)
+- **TypeScript 5.7**
+- **Angular Router** (`provideRouter`)
+- **Angular Material + CDK** (azure-blue prebuilt theme)
+- **RxJS 7.8** (ships with Angular)
+- **SCSS** as the style language
+- **`provideHttpClient()`** wired in app config (no API calls yet)
 
 ## What is NOT implemented yet
 
-- Login / JWT storage / auth guards / HTTP interceptors
+- JWT storage, auth guards, HTTP interceptors
 - Recipe, favorite, user, or admin screens
 - API service layer or HTTP calls
-- Angular Material showcase / demo pages
 - Reactive Forms (available via `@angular/forms`; wire up when needed)
-- NgRx state management (not in scope; add if the project grows)
+- NgRx state management
 - SSR / PWA
-- Unit / e2e tests (project scaffolded with `--skip-tests`)
+- Unit / e2e tests
 
-## CORS
+## Further reading
 
-The backend CORS policy (`"FrontendDevelopment"`) allows `http://localhost:4200`
-by default. Origins are configured in the `Cors:Origins` array in
-`appsettings.Development.json` (see `docs/backend-runbook.md`).
-
-If you change the Angular dev server port, add the new origin to that array.
-
-## Next steps (recommended)
-
-1. Add auth interceptor + JWT storage in `core/`
-2. Build API service layer in `core/` using `environment.apiBaseUrl`
-3. Create feature modules (auth, recipes, favorites, admin) under `features/`
-4. Add route guards for protected pages
-5. Wire up Reactive Forms for recipe creation/editing
+| Document | Contents |
+| -------- | -------- |
+| `docs/backend-runbook.md` | Backend setup, migrations, conventions |
+| `docs/api.md` | Full REST API contract |
+| `docs/auth-flow.md` | Passwordless login design |
+| `docs/result-convention.md` | Result pattern → HTTP mapping |
+| `docs/domain_model.md` | Entity relationships |
