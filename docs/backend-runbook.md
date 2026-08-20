@@ -83,6 +83,31 @@ dotnet run --project RecipeManager.Api
 - HTTPS: `https://localhost:7151`
 - Swagger UI (Development only): `/swagger`
 
+## CORS
+
+The API uses a named CORS policy (`"FrontendDevelopment"`) configured via
+the `Cors` section in `appsettings.json` / `appsettings.Development.json`:
+
+```json
+{
+  "Cors": {
+    "Origins": [
+      "http://localhost:5173",
+      "http://localhost:4200"
+    ]
+  }
+}
+```
+
+Allowed origins, headers (`Authorization`, `Content-Type`), and methods
+(`GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`) are all config-driven.
+The CORS policy is applied before authentication in the middleware pipeline
+so preflight `OPTIONS` requests succeed without a token.
+
+> **Note:** The `appsettings.Development.json` file is git-ignored.
+> Copy `appsettings.Development.json.example` if it does not exist.
+> The origins above cover Vite (`:5173`) and Angular (`:4200`) dev servers.
+
 ## Migrations workflow
 
 After changing entity/config files:
