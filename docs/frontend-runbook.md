@@ -110,7 +110,11 @@ No Bootstrap, Tailwind, or other CSS frameworks.
 
 ## CORS
 
-The backend must allow `http://localhost:4200` as an origin. If CORS is not already configured for that origin, add it in the backend's CORS policy (typically in `Program.cs` or `appsettings.json`). Do **not** use a proxy-only workaround — configure real CORS.
+The backend CORS policy (`"FrontendDevelopment"`) allows `http://localhost:4200`
+by default. Origins are configured in the `Cors:Origins` array in
+`appsettings.Development.json` (see `docs/backend-runbook.md`).
+
+If you change the Angular dev server port, add the new origin to that array.
 
 ## Next steps (recommended)
 
@@ -119,4 +123,3 @@ The backend must allow `http://localhost:4200` as an origin. If CORS is not alre
 3. Create feature modules (auth, recipes, favorites, admin) under `features/`
 4. Add route guards for protected pages
 5. Wire up Reactive Forms for recipe creation/editing
-6. Configure backend CORS for `http://localhost:4200` if not already done

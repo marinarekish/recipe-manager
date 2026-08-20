@@ -17,15 +17,22 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddControllers();
-        
+
+        builder.Services.Configure<CorsSettings>(
+            builder.Configuration.GetSection(CorsSettings.SectionName));
+
+        var corsSettings = builder.Configuration
+            .GetSection(CorsSettings.SectionName)
+            .Get<CorsSettings>() ?? new CorsSettings();
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("FrontendDevelopment", policy =>
             {
                 policy
-                    .WithOrigins("http://localhost:5173")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .WithOrigins(corsSettings.Origins)
+                    .WithHeaders("Authorization", "Content-Type")
+                    .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
             });
         });
         
