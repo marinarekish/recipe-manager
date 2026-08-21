@@ -56,6 +56,7 @@ public class RecipeServiceTests : IDisposable
             CategoryId: null, CategoryName: "lunch",
             PrepTimeMinutes: 5, CookTimeMinutes: 15,
             Servings: 2, Instructions: "Easy.",
+            ImageUrl: null,
             Ingredients: [new RecipeIngredientRequest(null, "salt", 1, "tsp")]);
 
         var result = await _sut.CreateRecipeAsync(author.UserId, request);
@@ -92,7 +93,7 @@ public class RecipeServiceTests : IDisposable
 
         var request = new UpdateRecipeRequest(
             Title: "Updated Pasta", null, null, null, null,
-            null, null, null, null, null);
+            null, null, null, null, null, null);
 
         var result = await _sut.UpdateRecipeAsync(
             recipe.RecipeId, author.UserId, isAdmin: false, request);
@@ -109,7 +110,7 @@ public class RecipeServiceTests : IDisposable
 
         var request = new UpdateRecipeRequest(
             Title: "Hacked", null, null, null, null,
-            null, null, null, null, null);
+            null, null, null, null, null, null);
 
         var result = await _sut.UpdateRecipeAsync(
             recipe.RecipeId, otherUser.UserId, isAdmin: false, request);

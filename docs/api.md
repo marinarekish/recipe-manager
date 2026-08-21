@@ -203,6 +203,7 @@ Request (`CreateRecipeRequest`):
   "cookTimeMinutes": 30,
   "servings": 4,
   "instructions": "Cook everything.",
+  "imageUrl": "https://example.com/images/tomato-soup.jpg",
   "ingredients": [
     { "name": "Tomato", "amount": 500, "unit": "g" },
     { "ingredientId": 3, "amount": 5, "unit": "g" }
@@ -212,7 +213,11 @@ Request (`CreateRecipeRequest`):
 
 Validation: `title` required; `ingredients` required (≥ 1 item);
 `*Id` (when present) ≥ 1; `prepTimeMinutes`/`cookTimeMinutes`/`servings`
-≥ 1; ingredient `amount` in `[0.01, 99999999.99]`.
+≥ 1; ingredient `amount` in `[0.01, 99999999.99]`; `imageUrl` optional
+(≤ 2048 chars, must contain non-whitespace when present). `imageUrl` is a
+plain URL string (absolute or relative) for future hero-image display;
+file upload/storage is out of scope — omitting it stores `null` and the
+UI is expected to show a placeholder.
 
 - **201** — `RecipeResponse` with `Location` header
   (`GET /api/recipes/{id}`)
@@ -230,12 +235,16 @@ ingredients use the same id-or-name fallback as `POST` when provided:
 {
   "title": "Tomato Basil Soup",
   "cuisineId": 2,
+  "imageUrl": "https://example.com/images/tomato-basil-soup.jpg",
   "ingredients": [
     { "name": "Tomato",   "amount": 600, "unit": "g" },
     { "ingredientId": 7, "amount": 20,  "unit": "ml" }
   ]
 }
 ```
+
+`imageUrl` follows the same rule as every other field: omitted/null keeps
+the current value (there is no way to clear it back to `null` yet).
 
 - **200** — `RecipeResponse`
 - **401** — no token / invalid token
@@ -388,6 +397,7 @@ New users (via `IUserService.CreateUserAsync`) get the `User` role by default.
   "cookTimeMinutes": 30,
   "servings": 4,
   "instructions": "Cook everything.",
+  "imageUrl": null,
   "cuisineId": 1,
   "cuisineName": "Italian",
   "categoryId": 8,
@@ -403,6 +413,9 @@ New users (via `IUserService.CreateUserAsync`) get the `User` role by default.
 ```
 
 Timestamps are UTC (`DateTime.UtcNow`); DB columns are `timestamptz`.
+
+`imageUrl` is `null` unless a URL string was set via `POST`/`PUT`;
+clients should fall back to a placeholder image when it is `null`.
 
 ---
 

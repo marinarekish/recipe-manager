@@ -8,6 +8,7 @@ public class RecipeResponse
     public int CookTimeMinutes { get; init; }
     public int Servings { get; init; }
     public string? Instructions { get; init; }
+    public string? ImageUrl { get; init; }
     public int CuisineId { get; init; }
     public string CuisineName { get; init; } = null!;
     public int CategoryId { get; init; }

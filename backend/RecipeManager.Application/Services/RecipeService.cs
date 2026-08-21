@@ -151,6 +151,8 @@ public class RecipeService(
                 recipeToUpdate.Servings = recipe.Servings.Value;
             if (recipe.Instructions is not null)
                 recipeToUpdate.Instructions = recipe.Instructions;
+            if (recipe.ImageUrl is not null)
+                recipeToUpdate.ImageUrl = recipe.ImageUrl;
 
             if (recipe.CuisineId is not null || !string.IsNullOrWhiteSpace(recipe.CuisineName))
                 recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);
