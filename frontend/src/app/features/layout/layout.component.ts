@@ -9,4 +9,5 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+}

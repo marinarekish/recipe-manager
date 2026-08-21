@@ -41,7 +41,6 @@ export class AuthService {
     return this.http.post<AuthResponse>(url, body).pipe(
       tap((auth) => {
           this.setSession(auth);
-          console.log(auth);
       }),
     )
   }
