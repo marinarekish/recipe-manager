@@ -48,6 +48,7 @@ public class RecipeMappingProfile : Profile
             .ForMember(d => d.CookTimeMinutes, o => o.Condition(s => s.CookTimeMinutes != null))
             .ForMember(d => d.Servings, o => o.Condition(s => s.Servings != null))
             .ForMember(d => d.Instructions, o => o.Condition(s => s.Instructions != null))
+            .ForMember(d => d.ImageUrl, o => o.Condition(s => s.ImageUrl != null))
             .ForMember(d => d.CuisineId, o => o.Ignore())
             .ForMember(d => d.CategoryId, o => o.Ignore());
         // CuisineId/CategoryId and ingredient ids are resolved via id-or-name

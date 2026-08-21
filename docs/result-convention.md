@@ -14,15 +14,15 @@ blocks.
 | ------------------ | -------------------- | ---------------------------------------------------- |
 | `Ok`               | 200                  | `{ value }` for `Result<T>`, bare 200 for `Result`   |
 | `NotFound`         | 404                  | `{ message }` if set, bare 404 otherwise             |
+| `NoContent`        | 204                  | empty body                                           |
 | `ValidationError`  | 400                  | `{ message, errors[] }`                              |
 | `Conflict`         | 409                  | `{ message }`                                        |
 | `Forbidden`        | 403                  | no body (standard ASP.NET Core `ForbidResult`)       |
 | `Unauthorized`     | 401                  | no body (standard ASP.NET Core `UnauthorizedResult`) |
 
-`CreatedAtRoute` (201) and `NoContent` (204) are returned explicitly by
-the controller when `result.IsSuccess` — they are not `ResultStatus`
-values because they carry controller-specific logic (Location header,
-empty body).
+`CreatedAtRoute` (201) is returned explicitly by the controller when
+`result.IsSuccess` — it is not a `ResultStatus` value because it carries
+controller-specific logic (Location header).
 
 ## Factory methods
 

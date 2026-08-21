@@ -86,7 +86,7 @@ subsequent requests.
 
 ## Categories — `/api/categories`
 
-Lookup data; update/delete intentionally out of scope.
+Lookup data with admin-only delete.
 
 ### `GET /api/categories`
 Returns all categories.
@@ -112,15 +112,31 @@ Request:
 
 `CategoryResponse`: `{ "categoryId": 1, "name": "Dessert" }`
 
+### `DELETE /api/categories/{id}`
+Admin only. Deletes a category by id.
+
+- **204** — deleted
+- **401** — no token / invalid token
+- **403** — non-admin
+- **404** — not found
+- **409** — category still in use by recipes
+
 ---
 
 ## Cuisines — `/api/cuisines`
 
-Same contract as categories:
-
 ### `GET /api/cuisines` → `List<CuisineResponse>` (200)
 ### `GET /api/cuisines/{id}` → `CuisineResponse` (200) | 404
 ### `POST /api/cuisines/get-or-create` → `CuisineResponse` (200) | 400
+
+### `DELETE /api/cuisines/{id}`
+Admin only. Deletes a cuisine by id.
+
+- **204** — deleted
+- **401** — no token / invalid token
+- **403** — non-admin
+- **404** — not found
+- **409** — cuisine still in use by recipes
 
 `CuisineResponse`: `{ "cuisineId": 1, "name": "Italian" }`
 
@@ -132,6 +148,15 @@ Same contract as categories:
 ### `GET /api/ingredients/{id}` → `IngredientResponse` (200) | 404
 ### `POST /api/ingredients/get-or-create` → `IngredientResponse` (200) | 400
 
+### `DELETE /api/ingredients/{id}`
+Admin only. Deletes an ingredient by id.
+
+- **204** — deleted
+- **401** — no token / invalid token
+- **403** — non-admin
+- **404** — not found
+- **409** — ingredient still in use by recipes
+
 `IngredientResponse`: `{ "ingredientId": 1, "name": "Milk" }`
 
 ---
@@ -139,11 +164,10 @@ Same contract as categories:
 ## Recipes — `/api/recipes`
 
 ### `GET /api/recipes`
-Admin only. Returns every recipe.
+Authenticated users only. Returns every recipe.
 
 - **200** — `List<RecipeResponse>`
 - **401** — no token / invalid token
-- **403** — non-admin
 
 ### `GET /api/recipes/me`
 Returns the current user's recipes.
@@ -153,9 +177,10 @@ Returns the current user's recipes.
 - **404** — current user does not exist in DB
 
 ### `GET /api/recipes/{id}`  (`id` must be an integer)
+Any authenticated user may read any recipe.
+
 - **200** — `RecipeResponse`
 - **401** — no token / invalid token
-- **403** — recipe exists but belongs to another user (non-admin)
 - **404** — not found
 
 ### `POST /api/recipes`
@@ -178,6 +203,7 @@ Request (`CreateRecipeRequest`):
   "cookTimeMinutes": 30,
   "servings": 4,
   "instructions": "Cook everything.",
+  "imageUrl": "https://example.com/images/tomato-soup.jpg",
   "ingredients": [
     { "name": "Tomato", "amount": 500, "unit": "g" },
     { "ingredientId": 3, "amount": 5, "unit": "g" }
@@ -187,7 +213,11 @@ Request (`CreateRecipeRequest`):
 
 Validation: `title` required; `ingredients` required (≥ 1 item);
 `*Id` (when present) ≥ 1; `prepTimeMinutes`/`cookTimeMinutes`/`servings`
-≥ 1; ingredient `amount` in `[0.01, 99999999.99]`.
+≥ 1; ingredient `amount` in `[0.01, 99999999.99]`; `imageUrl` optional
+(≤ 2048 chars, must contain non-whitespace when present). `imageUrl` is a
+plain URL string (absolute or relative) for future hero-image display;
+file upload/storage is out of scope — omitting it stores `null` and the
+UI is expected to show a placeholder.
 
 - **201** — `RecipeResponse` with `Location` header
   (`GET /api/recipes/{id}`)
@@ -197,20 +227,24 @@ Validation: `title` required; `ingredients` required (≥ 1 item);
   missing both id and name
 
 ### `PUT /api/recipes/{id}`  (idempotent full/partial update)
-Request (`UpdateRecipeRequest`) — every field optional; omitted/null fields
-keep their current value. Cuisine/category/ingredients use the same
-id-or-name fallback as `POST` when provided:
+Owner or Administrator only. Request (`UpdateRecipeRequest`) — every field
+optional; omitted/null fields keep their current value. Cuisine/category/
+ingredients use the same id-or-name fallback as `POST` when provided:
 
 ```json
 {
   "title": "Tomato Basil Soup",
   "cuisineId": 2,
+  "imageUrl": "https://example.com/images/tomato-basil-soup.jpg",
   "ingredients": [
     { "name": "Tomato",   "amount": 600, "unit": "g" },
     { "ingredientId": 7, "amount": 20,  "unit": "ml" }
   ]
 }
 ```
+
+`imageUrl` follows the same rule as every other field: omitted/null keeps
+the current value (there is no way to clear it back to `null` yet).
 
 - **200** — `RecipeResponse`
 - **401** — no token / invalid token
@@ -220,6 +254,8 @@ id-or-name fallback as `POST` when provided:
   missing both id and name
 
 ### `DELETE /api/recipes/{id}`
+Owner or Administrator only.
+
 - **204** — deleted
 - **401** — no token / invalid token
 - **403** — recipe exists but belongs to another user (non-admin)
@@ -361,6 +397,7 @@ New users (via `IUserService.CreateUserAsync`) get the `User` role by default.
   "cookTimeMinutes": 30,
   "servings": 4,
   "instructions": "Cook everything.",
+  "imageUrl": null,
   "cuisineId": 1,
   "cuisineName": "Italian",
   "categoryId": 8,
@@ -376,6 +413,9 @@ New users (via `IUserService.CreateUserAsync`) get the `User` role by default.
 ```
 
 Timestamps are UTC (`DateTime.UtcNow`); DB columns are `timestamptz`.
+
+`imageUrl` is `null` unless a URL string was set via `POST`/`PUT`;
+clients should fall back to a placeholder image when it is `null`.
 
 ---
 

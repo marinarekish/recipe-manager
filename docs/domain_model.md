@@ -287,9 +287,10 @@ Users log in with an email + one-time login code instead of a password:
 3. The code is delivered to the user's email (currently logged to the
    application log as temporary development behavior).
 4. The user submits the code; the server verifies it in constant time,
-   marks the token as used, and returns the user profile with roles.
+   marks the token as used, and returns the user profile with roles and
+   a JWT access token.
 
-JWT issuance and a real email provider are planned follow-ups.
+A real email provider is a planned follow-up.
 See `auth-flow.md` for details.
 
 ---
@@ -425,7 +426,7 @@ Possible future improvements include:
 - Recipe comments
 - Ratings and reviews
 - Step-by-step cooking instructions
-- JWT tokens and a real email provider (passwordless code is currently logged)
+- A real email provider (login code is currently logged)
 - Password hashing / alternative login methods
 - Search by ingredient
 - Pagination

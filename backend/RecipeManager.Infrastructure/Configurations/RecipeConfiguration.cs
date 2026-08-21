@@ -55,6 +55,11 @@ public class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             .HasColumnType("text")
             .IsRequired(false);
 
+        builder.Property(r => r.ImageUrl)
+            .HasColumnName("image_url")
+            .HasMaxLength(2048)
+            .IsRequired(false);
+
         builder.Property(r => r.CreatedAt)
             .HasColumnName("created_at")
             .HasColumnType("timestamp with time zone")

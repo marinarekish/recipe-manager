@@ -19,6 +19,7 @@ public class Recipe
     public int Servings { get; set; }
     
     public string? Instructions { get; set; } 
+    public string? ImageUrl { get; set; }
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

@@ -29,13 +29,11 @@ public class RecipeController(
     private bool IsAdmin => User.IsInRole("Administrator");
 
     [HttpGet]
-    [Authorize(Roles = "Administrator")]
     [ProducesResponseType(typeof(List<RecipeResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<List<RecipeResponse>>> GetAllByAdmin(CancellationToken ct = default)
+    public async Task<ActionResult<List<RecipeResponse>>> GetAll(CancellationToken ct = default)
     {
-        var recipes = await recipeService.GetAllRecipesByAdminAsync(ct);
+        var recipes = await recipeService.GetAllRecipesAsync(ct);
         return Ok(recipes);
     }
 
@@ -52,21 +50,13 @@ public class RecipeController(
     [HttpGet("{id:int}", Name = "GetRecipeById")]
     [ProducesResponseType(typeof(RecipeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRecipeById(
         int id,
         CancellationToken ct = default)
     {
         var result = await recipeService.GetRecipeByIdAsync(id, ct);
-
-        if (!result.IsSuccess)
-            return result.ToActionResult();
-
-        if (!IsAdmin && result.Value!.AuthorId != CurrentUserId)
-            return Forbid();
-
-        return Ok(result.Value);
+        return result.ToActionResult();
     }
 
     [HttpPost]

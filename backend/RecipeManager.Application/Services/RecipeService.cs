@@ -16,7 +16,7 @@ public class RecipeService(
     ICategoryService categoryService,
     IIngredientService ingredientService) : IRecipeService
 {
-    public async Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
+    public async Task<List<RecipeResponse>> GetAllRecipesAsync(
         CancellationToken ct = default)
     {
         return await context.Recipes
@@ -151,6 +151,8 @@ public class RecipeService(
                 recipeToUpdate.Servings = recipe.Servings.Value;
             if (recipe.Instructions is not null)
                 recipeToUpdate.Instructions = recipe.Instructions;
+            if (recipe.ImageUrl is not null)
+                recipeToUpdate.ImageUrl = recipe.ImageUrl;
 
             if (recipe.CuisineId is not null || !string.IsNullOrWhiteSpace(recipe.CuisineName))
                 recipeToUpdate.CuisineId = await ResolveCuisineIdAsync(recipe.CuisineId, recipe.CuisineName, ct);

@@ -5,7 +5,7 @@ namespace RecipeManager.Application.Interfaces;
 
 public interface IRecipeService
 {
-    Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
+    Task<List<RecipeResponse>> GetAllRecipesAsync(
         CancellationToken ct = default);
 
     Task<Result<RecipeResponse>> GetRecipeByIdAsync(

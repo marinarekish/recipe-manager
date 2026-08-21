@@ -61,9 +61,8 @@ This applies the existing migrations:
 Migrations seed lookup data automatically: categories, cuisines,
 ingredients, and roles (`Administrator`, `User`).
 
-> **Note:** users are **not** seeded. The recipe endpoints currently hardcode
-> the current user as id `1` (`CurrentUserId` in `RecipeController`). Insert
-> a user manually for recipe CRUD to work, e.g.:
+> **Note:** users are **not** seeded. Insert a user manually for recipe
+> CRUD to work, e.g.:
 >
 > ```sql
 > INSERT INTO users (first_name, last_name, email, created_at, updated_at)
@@ -154,6 +153,10 @@ CI so drift cannot slip in silently.
   instead of throwing exceptions or returning `null`. Controllers map
   these to HTTP via `ToActionResult()` — no per-exception `try/catch`
   blocks. See `result-convention.md`.
+- **JWT Bearer auth** — endpoints require a valid JWT token except
+  `/api/auth/*`. Identity comes from JWT claims (`sub` = userId,
+  `role` = role). Admin-only endpoints use
+  `[Authorize(Roles = "Administrator")]`.
 - **EF Configurations** — one `IEntityTypeConfiguration<T>` per entity in
   `RecipeManager.Infrastructure/Configurations`, registered via
   `ApplyConfigurationsFromAssembly` in `ApplicationDbContext`.
@@ -163,6 +166,9 @@ CI so drift cannot slip in silently.
 - **Mapping** — AutoMapper profiles in
   `RecipeManager.Application/Mapping`; services project entities to DTOs
   with `ProjectTo` and never return entities.
+- **camelCase JSON** — configured via `JsonNamingPolicy.CamelCase` in
+  `Program.cs`. C# DTO properties remain PascalCase; the serializer
+  handles the conversion.
 - **Timestamps** — `created_at`/`updated_at` are `timestamptz` with DB
   defaults; services also set `DateTime.UtcNow` explicitly.
 - **Naming** — tables/columns are `snake_case`, entities are `PascalCase`

@@ -12,5 +12,6 @@ public record UpdateRecipeRequest(
     [Range(1, int.MaxValue)] int? CookTimeMinutes,
     [Range(1, int.MaxValue)] int? Servings,
     string? Instructions,
+    [StringLength(2048), RegularExpression(@"^.*\S.*$")] string? ImageUrl,
     List<RecipeIngredientRequest>? Ingredients
 );
