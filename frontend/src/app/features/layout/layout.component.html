@@ -1,0 +1,14 @@
+<mat-toolbar color="primary" class="header">
+  <a routerLink="/" class="brand">Recipe Manager</a>
+
+  <nav class="nav-links">
+    <a routerLink="/recipes" routerLinkActive="active">My Recipes</a>
+    <a routerLink="/favorites" routerLinkActive="active">Favorites</a>
+    <a routerLink="/profile" routerLinkActive="active">Profile</a>
+    <a routerLink="/login" routerLinkActive="active">Login</a>
+  </nav>
+</mat-toolbar>
+
+<main class="content">
+  <router-outlet />
+</main>
