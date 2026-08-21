@@ -16,7 +16,7 @@ public class RecipeService(
     ICategoryService categoryService,
     IIngredientService ingredientService) : IRecipeService
 {
-    public async Task<List<RecipeResponse>> GetAllRecipesByAdminAsync(
+    public async Task<List<RecipeResponse>> GetAllRecipesAsync(
         CancellationToken ct = default)
     {
         return await context.Recipes
