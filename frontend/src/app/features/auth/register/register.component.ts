@@ -6,6 +6,7 @@ import {
   Validators
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { mergeMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 
 import {
@@ -82,24 +83,25 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.submitting = true;
 
-    this.authService.register(this.registerForm.getRawValue()).subscribe({
-      next: () => {
-        this.router.navigate(['/login'], {
-          queryParams: {
-            email: this.registerForm.controls.email.value
+    const email = this.registerForm.controls.email.value;
+
+    this.authService
+      .register(this.registerForm.getRawValue())
+      .pipe(mergeMap(() => this.authService.requestCode(email)))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/verify'], { queryParams: { email } });
+        },
+        error: (err) => {
+          this.submitting = false;
+          if (err.status === 409) {
+            this.errorMessage = 'Email already registered.';
+          } else if (err.status === 400) {
+            this.errorMessage = 'Please check the entered information.';
+          } else {
+            this.errorMessage = 'Registration failed. Please try again.';
           }
-        });
-      },
-      error: (err) => {
-        this.submitting = false;
-        if (err.status === 409) {
-          this.errorMessage = 'Email already registered.';
-        } else if (err.status === 400) {
-          this.errorMessage = 'Please check the entered information.';
-        } else {
-          this.errorMessage = 'Registration failed. Please try again.';
         }
-      }
-    });
+      });
   }
 }

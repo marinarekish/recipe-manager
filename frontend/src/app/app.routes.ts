@@ -5,6 +5,7 @@ import { authGuard } from './core/auth/auth.guard';
 import { adminGuard } from './core/auth/admin.guard';
 import {RegisterComponent} from './features/auth/register/register.component';
 import {LoginComponent} from './features/auth/login/login.component';
+import {VerifyCodeComponent} from './features/auth/verify-code/verify-code.component';
 
 export const routes: Routes = [
   {
@@ -25,7 +26,7 @@ export const routes: Routes = [
     ],
   },
   { path: 'login', component: LoginComponent, data: { title: 'Login' } },
-  { path: 'verify', component: PlaceholderComponent, data: { title: 'Verify' } },
+  { path: 'verify', component: VerifyCodeComponent, data: { title: 'Verify' } },
   { path: 'register', component: RegisterComponent, data: { title: 'Register' } },
   { path: '**', redirectTo: '' },
 ];
