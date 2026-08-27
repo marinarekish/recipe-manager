@@ -21,6 +21,19 @@ export class AuthService {
     this.restoreFromStorage();
   }
 
+  register(body: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+  }): Observable<UserDto>{
+
+    return this.http.post<UserDto>(
+      this.baseUrl + '/api/auth/register',
+      body
+    )
+  }
+
   requestCode(email: string): Observable<{ message: string }> {
     const body = {email: email.trim()};
 
@@ -75,7 +88,7 @@ export class AuthService {
     const rawUser = localStorage.getItem(USER_KEY);
 
     if (!token || !rawUser) {
-      this.currentUser.set(null);
+      this.logout();
       return;
     }
 
