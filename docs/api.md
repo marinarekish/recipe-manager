@@ -31,6 +31,32 @@ No `[Authorize]` means anonymous access (auth endpoints only).
 
 Passwordless login via email + one-time code. See `auth-flow.md`.
 
+### `POST /api/auth/register`
+
+Public self-registration (anonymous). Creates a new user with a default
+`User` role. Does **not** return a JWT — login remains
+request-code → verify-code.
+
+Request (`CreateUserRequest`):
+
+```json
+{
+  "firstName": "Maryna",
+  "lastName": "Rekish",
+  "email": "maryna@example.com",
+  "phone": null
+}
+```
+
+`email` is trimmed and lower-cased before saving.
+
+- **201** — `UserResponse`
+- **400** — validation failure
+- **409** — email already registered
+
+After registering, call `POST /api/auth/request-code` then
+`POST /api/auth/verify-code` to obtain an access token.
+
 ### `POST /api/auth/request-code`
 
 Issues a 6-digit login code for the given email. Returns the same
@@ -363,6 +389,25 @@ Request (`AssignRoleRequest`):
 - **401** — no token / invalid token
 - **403** — non-admin
 - **404** — user or role not found
+
+### `DELETE /api/users/me`
+Deletes the current user (their own account).
+
+- **204** — deleted
+- **400** — cannot delete the last administrator
+- **401** — no token / invalid token
+- **404** — current user does not exist in DB
+- **409** — referenced by recipes or other data
+
+### `DELETE /api/users/{id}`
+Admin only. Deletes any user by id.
+
+- **204** — deleted
+- **400** — cannot delete the last administrator
+- **401** — no token / invalid token
+- **403** — non-admin
+- **404** — not found
+- **409** — referenced by recipes or other data
 
 `UserResponse`:
 

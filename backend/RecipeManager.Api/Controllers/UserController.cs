@@ -89,4 +89,31 @@ public class UserController(IUserService userService) : ControllerBase
         var result = await userService.AssignRoleAsync(id, roleRequest.RoleId, ct);
         return result.ToActionResult();
     }
+
+    [HttpDelete("me")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteCurrentUser(
+        CancellationToken ct = default)
+    {
+        var result = await userService.DeleteUserAsync(CurrentUserId, ct);
+        return result.ToActionResult();
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Administrator")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteUser(
+        int id,
+        CancellationToken ct = default)
+    {
+        var result = await userService.DeleteUserAsync(id, ct);
+        return result.ToActionResult();
+    }
 }

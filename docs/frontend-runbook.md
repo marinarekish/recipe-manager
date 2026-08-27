@@ -43,17 +43,38 @@ dotnet ef database update \
   --startup-project RecipeManager.Api
 ```
 
-### 2. Seed a user
+### 2. Create a user (register)
 
-There is no public self-registration. A user must exist in the database
-to complete passwordless login. Insert one manually:
+There is public self-registration via `POST /api/auth/register`, so you no
+longer need a manual SQL seed for a normal login. Register any new email:
+
+```bash
+curl -X POST http://localhost:5053/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Admin","lastName":"Admin","email":"admin@example.com","phone":null}'
+```
+
+Response (201) — user created with the default `User` role (no token
+returned):
+
+```json
+{
+  "userId": 1,
+  "firstName": "Admin",
+  "lastName": "Admin",
+  "email": "admin@example.com",
+  "phone": null,
+  "roles": [{ "roleId": 2, "name": "User" }],
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+To grant the Administrator role (optional), insert directly:
 
 ```sql
-INSERT INTO users (first_name, last_name, email, created_at, updated_at)
-VALUES ('Admin', 'Admin', 'admin@example.com', now(), now());
-
--- optionally grant the Administrator role
-INSERT INTO users_roles (user_id, role_id) VALUES (1, 1);
+INSERT INTO users_roles (user_id, role_id) SELECT 1, 1
+WHERE NOT EXISTS (SELECT 1 FROM users_roles WHERE user_id = 1 AND role_id = 1);
 ```
 
 You can use any email — you will read the login code from the API logs,
@@ -176,7 +197,7 @@ all previous active codes for that user.
 | ----------- | -------------- |
 | PostgreSQL running | Start PostgreSQL on `localhost:5432` |
 | Database created + migrations applied | `dotnet ef database update` (see above) |
-| At least one user in DB | Manual `INSERT` (see seed above) |
+| At least one user in DB | `POST /api/auth/register` (see above) |
 | JWT key configured | `Jwt:Key` in `appsettings.Development.json` (≥ 32 chars) |
 
 ### JWT settings
