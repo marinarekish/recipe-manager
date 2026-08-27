@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import {Observable, tap} from 'rxjs';
 
 import { AuthResponse, UserDto} from './auth.models';
-import { environment} from '../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 const TOKEN_KEY = 'rm_access_token';
 const USER_KEY = 'rm_user';

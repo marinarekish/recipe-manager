@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RecipeManager.Api.Extensions;
 using RecipeManager.Application.Contracts.Auth;
+using RecipeManager.Application.Contracts.Users;
 using RecipeManager.Application.Interfaces;
 
 namespace RecipeManager.Api.Controllers;
@@ -9,7 +10,7 @@ namespace RecipeManager.Api.Controllers;
 [ApiController]
 [Route("api/auth")]
 [AllowAnonymous]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, IUserService userService) : ControllerBase
 {
     [HttpPost("request-code")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -36,5 +37,21 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         var result = await authService.VerifyLoginCodeAsync(request.Email, request.Code, ct);
         return result.ToActionResult();
+    }
+
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Register(
+        [FromBody] CreateUserRequest request,
+        CancellationToken ct = default)
+    {
+        var result = await userService.CreateUserAsync(request, ct);
+
+        if (!result.IsSuccess)
+            return result.ToActionResult();
+
+        return CreatedAtAction(nameof(Register), result.Value);
     }
 }

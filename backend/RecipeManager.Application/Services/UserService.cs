@@ -50,7 +50,7 @@ public class UserService(
                 .AnyAsync(u => u.Email == email, ct);
 
             if (emailExists)
-                return Result<UserResponse>.ValidationError(
+                return Result<UserResponse>.Conflict(
                     "User with this email already exists.");
 
             var defaultRoleId = await GetRoleIdByNameAsync("User", ct);
@@ -158,8 +158,35 @@ public class UserService(
                 await GetAdminCountAsync(adminRoleId, ct) == 1)
                 return Result.ValidationError("Cannot delete the last administrator.");
 
+            // Delete every recipe authored by this user. Recipe → Author is
+            // Restrict, so they must be removed explicitly. 
+            var authoredRecipes = await context.Recipes
+                .Where(r => r.AuthorId == id)
+                .ToListAsync(ct);
+
+            var favoriteIds = await context.UserFavorites
+                .Where(uf => uf.UserId == id &&
+                             uf.Recipe != null &&
+                             uf.Recipe.AuthorId != id)
+                .Select(uf => uf.RecipeId)
+                .ToListAsync(ct);
+            if (favoriteIds.Count > 0)
+                await context.UserFavorites
+                    .Where(uf => uf.UserId == id && favoriteIds.Contains(uf.RecipeId))
+                    .ExecuteDeleteAsync(ct);
+
+            context.Recipes.RemoveRange(authoredRecipes);
             context.Users.Remove(userToDelete);
-            await context.SaveChangesAsync(ct);
+
+            try
+            {
+                await context.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Conflict(
+                    "Cannot delete user — referenced by recipes or other data.");
+            }
 
             return Result.Ok();
         }

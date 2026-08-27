@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RecipeManager.Application.Common.Results;
 using RecipeManager.Application.Contracts.Users;
 using RecipeManager.Application.Services;
@@ -70,5 +71,54 @@ public class UserServiceTests : IDisposable
 
         Assert.Equal(ResultStatus.ValidationError, result.Status);
         Assert.Contains("last administrator", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task CreateUser_NewEmail_ReturnsOkWithDefaultUserRole()
+    {
+        await TestDataSeeder.SeedRolesAsync(_db);
+        var request = new CreateUserRequest("New", "User", "newUser@example.com", null);
+
+        var result = await _sut.CreateUserAsync(request);
+
+        Assert.Equal(ResultStatus.Ok, result.Status);
+        Assert.Equal("maryna@example.com", result.Value!.Email);
+        Assert.Equal("Maryna", result.Value.FirstName);
+        Assert.Contains(result.Value.Roles, r => r.Name == "User");
+        Assert.DoesNotContain(result.Value.Roles, r => r.Name == "Administrator");
+    }
+
+    [Fact]
+    public async Task CreateUser_DuplicateEmail_ReturnsConflict()
+    {
+        var user = await TestDataSeeder.SeedUserAsync(_db, "one@example.com");
+        var request = new CreateUserRequest("Other", "User", "ONE@example.com", null);
+
+        var result = await _sut.CreateUserAsync(request);
+
+        Assert.Equal(ResultStatus.Conflict, result.Status);
+        Assert.Contains("already exists", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteUser_LastAdmin_ReturnsValidationError()
+    {
+        var admin = await TestDataSeeder.SeedUserAsync(_db, "admin@example.com", roleId: 1);
+
+        var result = await _sut.DeleteUserAsync(admin.UserId);
+
+        Assert.Equal(ResultStatus.ValidationError, result.Status);
+        Assert.Contains("last administrator", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteUser_RegularUser_ReturnsOk()
+    {
+        var user = await TestDataSeeder.SeedUserAsync(_db, "user@example.com", roleId: 2);
+
+        var result = await _sut.DeleteUserAsync(user.UserId);
+
+        Assert.Equal(ResultStatus.Ok, result.Status);
+        Assert.False(await _db.Users.AnyAsync(u => u.UserId == user.UserId));
     }
 }

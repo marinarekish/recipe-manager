@@ -8,6 +8,19 @@
 Users log in with an email + one-time login code instead of a password.
 The code is sent to the user's email (currently just logged in development).
 
+## Registration (no password)
+
+There is no password or public account-creation flow that sets a password.
+A new user is created via `POST /api/auth/register` (anonymous) with
+`CreateUserRequest` (`firstName`, `lastName`, `email`, optional `phone`).
+The service assigns the default **User** role. Registration does **not**
+return a JWT — after registering the user follows the normal
+request-code → verify-code flow below.
+
+Users can also sign up reactively: `POST /api/auth/request-code` for a
+non-existent email only fails at the service layer (returns 404); there is
+no auto-registration on request-code. Registration must be explicit first.
+
 ## Flow
 
 ```
