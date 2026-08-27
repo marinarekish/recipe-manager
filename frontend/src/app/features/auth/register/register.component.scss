@@ -9,7 +9,7 @@
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   padding: 1rem;
   box-sizing: border-box;
 }
@@ -32,6 +32,12 @@ form {
   gap: 0.5rem;
 }
 
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 mat-form-field {
   width: 100%;
 }
@@ -42,12 +48,10 @@ mat-form-field {
   margin-top: 0.5rem;
 }
 
-.dev-hint {
-  margin: 1rem 0 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  text-align: center;
-  opacity: 0.7;
+.auth-footer {
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 1rem;
 }
 
 .error-message {
@@ -58,22 +62,15 @@ mat-form-field {
   line-height: 1.4;
 }
 
-.error-link {
-  display: inline-block;
-  margin-left: 0.25rem;
-  font-weight: 500;
-}
-
-.auth-footer {
-  justify-content: center;
-  gap: 0.25rem;
-  margin-top: 1rem;
-}
-
 @media (max-width: 600px) {
   .auth-page {
     align-items: flex-start;
     padding-top: 1.5rem;
+  }
+
+  .name-row {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .auth-card {

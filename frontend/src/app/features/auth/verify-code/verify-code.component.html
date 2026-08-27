@@ -1,0 +1,83 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Check your code</mat-card-title>
+      <mat-card-subtitle>
+        Enter the 6-digit code sent to {{ email }}.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (errorMessage) {
+        <div class="error-message" role="alert">
+          {{ errorMessage }}
+          @if (notFound) {
+            <a routerLink="/register" class="error-link">Create an account</a>
+          }
+        </div>
+      }
+
+      @if (resendMessage) {
+        <div class="resend-message" role="status">
+          {{ resendMessage }}
+        </div>
+      }
+
+      <form (ngSubmit)="verify()">
+        <mat-form-field appearance="outline">
+          <mat-label>6-digit code</mat-label>
+          <input
+            matInput
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [formControl]="code"
+            placeholder="000000"
+            maxlength="6"
+          />
+
+          @if (code.hasError('required')) {
+            <mat-error>Code is required</mat-error>
+          }
+
+          @if (code.hasError('minlength') || code.hasError('maxlength')) {
+            <mat-error>Code must be 6 digits</mat-error>
+          }
+
+          @if (code.hasError('pattern')) {
+            <mat-error>Code must be 6 digits</mat-error>
+          }
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          type="submit"
+          class="submit-button"
+          [disabled]="code.invalid || submitting"
+        >
+          {{ submitting ? 'Verifying…' : 'Log in' }}
+        </button>
+      </form>
+
+      <p class="dev-hint">
+        In development, the 6-digit code appears in the API console logs.
+      </p>
+    </mat-card-content>
+
+    <mat-card-actions class="auth-footer">
+      <button
+        mat-button
+        type="button"
+        class="resend-button"
+        [disabled]="submitting"
+        (click)="resend()"
+      >
+        Resend code
+      </button>
+
+      <a mat-button routerLink="/login" class="change-email">
+        Use a different email
+      </a>
+    </mat-card-actions>
+  </mat-card>
+</div>
