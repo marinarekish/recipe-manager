@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -39,6 +39,7 @@ import { MatButton } from '@angular/material/button';
     MatError,
     MatInput,
     MatButton,
+    FormsModule,
   ],
 })
 export class VerifyCodeComponent {
