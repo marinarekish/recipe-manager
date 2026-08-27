@@ -1,6 +1,6 @@
-import {Injectable, signal, inject} from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {Observable, tap} from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 import { AuthResponse, UserDto} from './auth.models';
 import { environment } from '../../../environments/environment';
