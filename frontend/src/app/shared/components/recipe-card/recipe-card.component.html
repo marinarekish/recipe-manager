@@ -1,0 +1,49 @@
+<a [routerLink]="['/recipes', recipe.recipeId]" class="recipe-card-link">
+  <mat-card class="recipe-card" appearance="outlined">
+    <div class="card-media">
+      @if (recipe.imageUrl) {
+        <img [src]="recipe.imageUrl" [alt]="recipe.title" class="card-image" />
+      } @else {
+        <div class="image-placeholder">
+          <img src="/assets/icons/image-placeholder.png" alt="" />
+        </div>
+      }
+
+      <div class="tags-container">
+        @if (recipe.categoryName) {
+          <span class="tag tag-category">{{ recipe.categoryName }}</span>
+        }
+        @if (recipe.cuisineName) {
+          <span class="tag tag-cuisine">{{ recipe.cuisineName }}</span>
+        }
+      </div>
+
+      <button
+        mat-icon-button
+        type="button"
+        class="favorite-btn"
+        [class.is-favorite]="isFavorite"
+        (click)="onToggleFavorite($event)"
+        [attr.aria-label]="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+      >
+        <mat-icon>{{ isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
+    </div>
+
+    <mat-card-content class="card-body">
+      <h3 class="recipe-title">{{ recipe.title }}</h3>
+      <p class="recipe-author">{{ recipe.authorName }}</p>
+
+      <div class="card-footer">
+        <div class="meta-item">
+          <mat-icon class="meta-icon">schedule</mat-icon>
+          <span>{{ totalTime }} min</span>
+        </div>
+        <div class="meta-item">
+          <mat-icon class="meta-icon">group</mat-icon>
+          <span>{{ recipe.servings }} serv</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</a>

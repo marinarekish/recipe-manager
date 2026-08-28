@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
-import {CreateRecipeRequest, Recipe, UpdateRecipeRequest} from './recipe.models';
 import { Observable } from 'rxjs';
+
+import { environment } from '../../../../environments/environment';
+import { CreateRecipeRequest, Recipe, UpdateRecipeRequest } from './recipe.models';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +14,7 @@ export class RecipeService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/recipes`;
 
   getAll(): Observable<Recipe[]>{
-    return this.http.get<Recipe[]>(`${this.baseUrl}/recipes`);
+    return this.http.get<Recipe[]>(this.baseUrl);
   }
 
   getMine(): Observable<Recipe[]> {
@@ -21,7 +22,7 @@ export class RecipeService {
   }
 
   getById(id: number): Observable<Recipe> {
-    return this.http.get<Recipe>(`${this.baseUrl}/recipes/${id}`);
+    return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
   }
 
   create(body: CreateRecipeRequest): Observable<Recipe> {
@@ -29,11 +30,11 @@ export class RecipeService {
   }
 
   update(id: number, body: UpdateRecipeRequest): Observable<Recipe> {
-    return this.http.put<Recipe>(`${this.baseUrl}/recipes/${id}`, body);
+    return this.http.put<Recipe>(`${this.baseUrl}/${id}`, body);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/recipes/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }
 

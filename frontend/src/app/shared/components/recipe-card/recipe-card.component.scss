@@ -1,0 +1,146 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+}
+
+.recipe-card {
+  border-radius: 20px !important;
+  overflow: hidden;
+  border: 1px solid #eaeaea !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  background-color: #ffffff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  }
+}
+
+.card-media {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .image-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #f2f2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 30%;
+      height: 50%;
+      opacity: 0.4;
+    }
+  }
+
+  .tags-container {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+
+    .tag {
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+
+      &.tag-category {
+        background-color: #ffffff;
+        color: #1a1a1a;
+      }
+
+      &.tag-cuisine {
+        background-color: #c84b31;
+        color: #ffffff;
+      }
+    }
+  }
+
+  .favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 2;
+    background-color: #ffffff !important;
+    color: #595959;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+    }
+
+    &.is-favorite {
+      color: #e53935;
+    }
+  }
+}
+
+.card-body {
+  padding: 16px 20px !important;
+
+  .recipe-title {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recipe-author {
+    margin: 0 0 16px 0;
+    font-size: 0.85rem;
+    color: #757575;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #757575;
+      font-size: 0.8rem;
+      font-weight: 500;
+
+      .meta-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        color: #8c8c8c;
+      }
+    }
+  }
+}

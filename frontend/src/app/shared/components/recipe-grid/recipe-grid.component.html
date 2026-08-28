@@ -1,0 +1,24 @@
+@if (loading) {
+  <div class="state-container">
+    <div class="spinner"></div>
+    <p class="state-text">Loading recipes...</p>
+  </div>
+} @else if (errorMessage) {
+  <div class="state-container error" role="alert">
+    <p class="state-text">{{ errorMessage }}</p>
+  </div>
+} @else if (recipes.length === 0) {
+  <div class="state-container">
+    <p class="state-text">No recipes found.</p>
+  </div>
+} @else {
+  <div class="recipe-grid">
+    @for (recipe of recipes; track recipe.recipeId) {
+      <app-recipe-card
+        [recipe]="recipe"
+        [isFavorite]="false"
+        (favoriteToggle)="onFavoriteToggle($event)"
+      />
+    }
+  </div>
+}
