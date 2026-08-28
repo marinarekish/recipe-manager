@@ -1,11 +1,19 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './features/layout/layout.component';
+
 import { PlaceholderComponent } from './shared/components/placeholder/placeholder.component';
+
 import { authGuard } from './core/auth/auth.guard';
 import { adminGuard } from './core/auth/admin.guard';
-import {RegisterComponent} from './features/auth/register/register.component';
-import {LoginComponent} from './features/auth/login/login.component';
-import {VerifyCodeComponent} from './features/auth/verify-code/verify-code.component';
+import { recipeIdGuard } from './core/recipes/recipes.guard';
+
+import { RegisterComponent } from './features/auth/register/register.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { VerifyCodeComponent } from './features/auth/verify-code/verify-code.component';
+
+import { ExploreComponent } from './features/recipes/pages/explore/explore.component';
+import { MyRecipesComponent } from './features/recipes/pages/my-recipes/my-recipes.component';
+import { RecipeDetailComponent } from './features/recipes/pages/recipe-detail/recipe-detail.component';
 
 export const routes: Routes = [
   {
@@ -14,7 +22,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'recipes', pathMatch: 'full' },
-      { path: 'recipes', component: PlaceholderComponent, data: { title: 'My Recipes' } },
+      // Static 'me' before ':id', otherwise "me" is parsed as an id.
+      { path: 'recipes/me', component: MyRecipesComponent, data: { title: 'My Recipes' } },
+      {
+        path: 'recipes/:id',
+        component: RecipeDetailComponent,
+        canActivate: [recipeIdGuard],
+        data: { title: 'Recipe' },
+      },
+      { path: 'recipes', component: ExploreComponent, data: { title: 'Explore' } },
       { path: 'favorites', component: PlaceholderComponent, data: { title: 'Favorites' } },
       { path: 'profile', component: PlaceholderComponent, data: { title: 'Profile' } },
       {

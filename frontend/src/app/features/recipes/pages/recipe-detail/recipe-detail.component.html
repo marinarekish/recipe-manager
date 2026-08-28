@@ -1,0 +1,117 @@
+<section class="detail-page">
+  <div class="detail-topbar">
+    <a routerLink="/recipes" class="back-link">
+      <img src="/assets/icons/back.png" alt="" class="back-icon" />
+      <span>Back</span>
+    </a>
+  </div>
+
+  @if (loading) {
+    <div class="detail-state">
+      <div class="spinner"></div>
+      <p class="state-text">Loading recipe...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="detail-state error" role="alert">
+      <p class="state-text">{{ errorMessage }}</p>
+    </div>
+  } @else if (recipe) {
+    <article class="detail-sheet">
+      <div class="detail-hero">
+        @if (recipe.imageUrl) {
+          <img [src]="recipe.imageUrl" [alt]="recipe.title" class="hero-image" />
+        } @else {
+          <div class="hero-placeholder">
+            <img src="/assets/icons/image-placeholder.png" alt="" />
+          </div>
+        }
+
+        <div class="hero-overlay">
+          <div class="hero-tags">
+            @if (recipe.categoryName) {
+              <span class="tag tag-category">{{ recipe.categoryName }}</span>
+            }
+            @if (recipe.cuisineName) {
+              <span class="tag tag-cuisine">{{ recipe.cuisineName }}</span>
+            }
+          </div>
+          <h1 class="hero-title">{{ recipe.title }}</h1>
+        </div>
+      </div>
+
+      <div class="detail-toolbar">
+        <div class="detail-meta">
+          <div class="meta-item">
+            <img src="/assets/icons/time.png" alt="" class="meta-icon" />
+            <div class="meta-text">
+              <span class="meta-value">{{ recipe.prepTimeMinutes }} min</span>
+              <span class="meta-label">Prep</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <img src="/assets/icons/time.png" alt="" class="meta-icon" />
+            <div class="meta-text">
+              <span class="meta-value">{{ recipe.cookTimeMinutes }} min</span>
+              <span class="meta-label">Cook</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <img src="/assets/icons/servings.png" alt="" class="meta-icon" />
+            <div class="meta-text">
+              <span class="meta-value">{{ recipe.servings }}</span>
+              <span class="meta-label">Servings</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          @if (canManage()) {
+            <button type="button" class="action-btn edit-btn" aria-label="Edit recipe">
+              <img src="/assets/icons/edit.png" alt="" class="action-icon" />
+              <span>Edit</span>
+            </button>
+            <button
+              type="button"
+              class="action-btn delete-btn"
+              (click)="delete()"
+              aria-label="Delete recipe"
+            >
+              <img src="/assets/icons/delete.png" alt="" class="action-icon" />
+              <span>Delete</span>
+            </button>
+          } @else {
+            <button type="button" class="action-btn favorite-btn" aria-label="Add to favorites">
+              <img src="/assets/icons/heart.png" alt="" class="action-icon" />
+              <span>Favorite</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="detail-author">
+        Author: {{ recipe.authorName }}
+      </div>
+
+      <div class="detail-columns">
+        <section class="detail-ingredients">
+          <h2 class="column-title">Ingredients</h2>
+          <ul class="ingredient-list">
+            @for (ingredient of recipe.ingredients; track ingredient.ingredientId) {
+              <li class="ingredient-row">
+                <span class="ingredient-name">{{ ingredient.name }}</span>
+                <span class="ingredient-amount">
+                  {{ ingredient.amount }} {{ ingredient.unit }}
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="detail-instructions">
+          <h2 class="column-title">Instructions</h2>
+          <p class="instructions-text">{{ recipe.instructions }}</p>
+        </section>
+      </div>
+    </article>
+  }
+</section>

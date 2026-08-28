@@ -93,12 +93,15 @@ export class VerifyCodeComponent {
       },
       error: (err) => {
         this.submitting = false;
+
         if (err.status === 401) {
           this.errorMessage = 'The code is invalid or has expired.';
+
         } else if (err.status === 404) {
           this.notFound = true;
           this.errorMessage =
             'No account found for this email. Please register first.';
+
         } else {
           this.errorMessage =
             'Something went wrong. Please try again shortly.';

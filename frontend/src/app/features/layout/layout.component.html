@@ -1,14 +1,62 @@
-<mat-toolbar color="primary" class="header">
-  <a routerLink="/" class="brand">Recipe Manager</a>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="brand-header">
+      <img src="/assets/icons/logo.svg" alt="Mise Logo" class="brand-logo" />
+      <div class="brand-text">
+        <span class="brand-title">Mise</span>
+        <span class="brand-subtitle">RECIPE MANAGER</span>
+      </div>
+    </div>
 
-  <nav class="nav-links">
-    <a routerLink="/recipes" routerLinkActive="active">My Recipes</a>
-    <a routerLink="/favorites" routerLinkActive="active">Favorites</a>
-    <a routerLink="/profile" routerLinkActive="active">Profile</a>
-    <a routerLink="/login" routerLinkActive="active">Login</a>
-  </nav>
-</mat-toolbar>
+    <nav class="nav-menu">
+      <a
+        routerLink="/recipes"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
+      >
+        <img src="/assets/icons/explore.png" alt="" class="nav-icon" />
+        <span class="nav-label">Explore</span>
+      </a>
+      <a routerLink="/recipes/me" routerLinkActive="active" class="nav-item">
+        <img src="/assets/icons/book.png" alt="" class="nav-icon" />
+        <span class="nav-label">My Recipes</span>
+      </a>
+      <a routerLink="/favorites" routerLinkActive="active" class="nav-item">
+        <img src="/assets/icons/heart.png" alt="" class="nav-icon" />
+        <span class="nav-label">Favorites</span>
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+        <img src="/assets/icons/user.png" alt="" class="nav-icon" />
+        <span class="nav-label">Profile</span>
+      </a>
+    </nav>
 
-<main class="content">
-  <router-outlet />
-</main>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="avatar">{{ initial() }}</div>
+        <div class="user-info">
+          <span class="user-name">
+            @if (user(); as u) {
+              {{ u.firstName }} {{ u.lastName }}
+            } @else {
+              Guest
+            }
+          </span>
+          @if (user()?.email) {
+            <span class="user-email">{{ user()!.email }}</span>
+          }
+        </div>
+      </div>
+
+      <button type="button" class="logout-button" (click)="logout()">
+        <img src="/assets/icons/logout.png" alt="" class="logout-icon" />
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
