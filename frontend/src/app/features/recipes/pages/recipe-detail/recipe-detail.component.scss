@@ -239,6 +239,17 @@
         border-color: #c62828;
       }
     }
+
+    &.favorite-btn.active {
+      border-color: #c84b31;
+      color: #c84b31;
+      background-color: #c84b31;
+
+      .action-icon {
+        opacity: 1;
+        filter: invert(5%) sepia(62%) saturate(3000%) hue-rotate(335deg) brightness(50) contrast(1.05);
+      }
+    }
   }
 }
 

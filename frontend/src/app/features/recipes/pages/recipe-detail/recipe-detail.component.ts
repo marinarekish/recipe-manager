@@ -1,10 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { Recipe} from '../../data/recipe.models';
+import { Recipe } from '../../data/recipe.models';
 
 import { RecipeService } from '../../data/recipe.service';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { FavoriteService } from '../../../favorites/data/favorite.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -18,10 +19,12 @@ export class RecipeDetailComponent implements OnInit {
   private router = inject(Router);
   private recipeService = inject(RecipeService);
   private authService = inject(AuthService);
+  private favoriteService = inject(FavoriteService);
 
   recipe: Recipe | null = null;
   loading = true;
   errorMessage = '';
+  isFavorite = false;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -44,11 +47,53 @@ export class RecipeDetailComponent implements OnInit {
       next: (recipe) => {
         this.recipe = recipe;
         this.loading = false;
+        this.loadFavoriteState(recipe.recipeId);
       },
       error: (err) => {
+        this.loading = false;
         this.handleSaveError(err);
       }
     })
+  }
+
+  private loadFavoriteState(recipeId: number): void {
+    this.favoriteService.getAllFavorites().subscribe({
+      next: (favorites) => {
+        this.isFavorite = (favorites ?? []).some((f) => f.recipeId === recipeId);
+      },
+      error: () => {
+        this.isFavorite = false;
+      },
+    });
+  }
+
+  onToggleFavorite(): void {
+    if (!this.recipe) {
+      return;
+    }
+
+    const recipeId = this.recipe.recipeId;
+
+    if (this.isFavorite) {
+      this.favoriteService.remove(recipeId).subscribe({
+        next: () => {
+          this.isFavorite = false;
+        },
+        error: () => {
+          this.errorMessage = 'Could not remove from favorites.';
+        },
+      });
+      return;
+    }
+
+    this.favoriteService.add({ recipeId }).subscribe({
+      next: () => {
+        this.isFavorite = true;
+      },
+      error: () => {
+        this.errorMessage = 'Could not add to favorites.';
+      },
+    });
   }
 
   canManage(): boolean {

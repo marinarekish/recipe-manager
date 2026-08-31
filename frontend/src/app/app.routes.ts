@@ -15,6 +15,7 @@ import { ExploreComponent } from './features/recipes/pages/explore/explore.compo
 import { MyRecipesComponent } from './features/recipes/pages/my-recipes/my-recipes.component';
 import { RecipeDetailComponent } from './features/recipes/pages/recipe-detail/recipe-detail.component';
 import { RecipeFormComponent } from './features/recipes/pages/recipe-form/recipe-form.component';
+import {FavoritesListComponent} from './features/favorites/pages/favorites-list/favorites-list.component';
 
 export const routes: Routes = [
   {
@@ -35,7 +36,7 @@ export const routes: Routes = [
         data: { title: 'Recipe' },
       },
       { path: 'recipes', component: ExploreComponent, data: { title: 'Explore' } },
-      { path: 'favorites', component: PlaceholderComponent, data: { title: 'Favorites' } },
+      { path: 'favorites', component: FavoritesListComponent, data: { title: 'Favorites' } },
       { path: 'profile', component: PlaceholderComponent, data: { title: 'Profile' } },
       {
         path: 'admin/users',
