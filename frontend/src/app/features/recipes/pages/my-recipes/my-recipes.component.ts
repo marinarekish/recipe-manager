@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { RecipeService } from '../../data/recipe.service';
 import { Recipe } from '../../data/recipe.models';
@@ -7,7 +8,7 @@ import { RecipeGridComponent } from '../../../../shared/components/recipe-grid/r
 @Component({
   selector: 'app-my-recipes',
   standalone: true,
-  imports: [RecipeGridComponent],
+  imports: [RouterLink, RecipeGridComponent],
   templateUrl: './my-recipes.component.html',
   styleUrl: './my-recipes.component.scss',
 })

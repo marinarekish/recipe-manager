@@ -1,9 +1,9 @@
 <section class="detail-page">
   <div class="detail-topbar">
-    <a routerLink="/recipes" class="back-link">
+    <button type="button" class="back-link" (click)="goBack()">
       <img src="/assets/icons/back.png" alt="" class="back-icon" />
       <span>Back</span>
-    </a>
+    </button>
   </div>
 
   @if (loading) {
@@ -65,11 +65,23 @@
         </div>
 
         <div class="detail-actions">
-          @if (canManage()) {
-            <button type="button" class="action-btn edit-btn" aria-label="Edit recipe">
+          <button type="button" class="action-btn favorite-btn" aria-label="Add to favorites">
+            <img src="/assets/icons/heart.png" alt="" class="action-icon" />
+            <span>Favorite</span>
+          </button>
+
+          @if (canEdit()) {
+            <a
+              [routerLink]="['/recipes', recipe.recipeId, 'edit']"
+              class="action-btn edit-btn"
+              aria-label="Edit recipe"
+            >
               <img src="/assets/icons/edit.png" alt="" class="action-icon" />
               <span>Edit</span>
-            </button>
+            </a>
+          }
+
+          @if (canManage()) {
             <button
               type="button"
               class="action-btn delete-btn"
@@ -78,11 +90,6 @@
             >
               <img src="/assets/icons/delete.png" alt="" class="action-icon" />
               <span>Delete</span>
-            </button>
-          } @else {
-            <button type="button" class="action-btn favorite-btn" aria-label="Add to favorites">
-              <img src="/assets/icons/heart.png" alt="" class="action-icon" />
-              <span>Favorite</span>
             </button>
           }
         </div>

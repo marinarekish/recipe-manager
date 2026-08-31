@@ -1,0 +1,226 @@
+<section class="form-page">
+  <div class="form-topbar">
+    <a routerLink="/recipes/me" class="back-link">
+      <img src="/assets/icons/back.png" alt="" class="back-icon" />
+      <span>Back</span>
+    </a>
+    <h1 class="page-title">{{ isEditing ? 'Edit Recipe' : 'Create Recipe' }}</h1>
+  </div>
+
+  @if (errorMessage) {
+    <div class="form-alert error" role="alert">{{ errorMessage }}</div>
+  }
+
+  <form [formGroup]="recipeForm" (ngSubmit)="submit()" class="recipe-form" novalidate>
+    <div class="form-card">
+      <h2 class="card-title">Basics</h2>
+
+      <div class="field">
+        <label class="field-label" for="title">Title</label>
+        <input
+          id="title"
+          type="text"
+          formControlName="title"
+          class="field-input"
+          placeholder="Pasta Carbonara"
+        />
+        @if (recipeForm.controls.title.touched && recipeForm.controls.title.hasError('required')) {
+          <p class="field-error">Title is required</p>
+        } @else if (recipeForm.controls.title.touched && recipeForm.controls.title.hasError('minlength')) {
+          <p class="field-error">Title must be at least 3 characters</p>
+        }
+      </div>
+
+      <div class="field-row two-col">
+        <div class="field">
+          <label class="field-label" for="categoryName">Category</label>
+          <input
+            id="categoryName"
+            type="text"
+            formControlName="categoryName"
+            class="field-input"
+            placeholder="Dinner"
+          />
+          @if (recipeForm.controls.categoryName.touched && recipeForm.controls.categoryName.hasError('required')) {
+            <p class="field-error">Category is required</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="cuisineName">Cuisine</label>
+          <input
+            id="cuisineName"
+            type="text"
+            formControlName="cuisineName"
+            class="field-input"
+            placeholder="Italian"
+          />
+          @if (recipeForm.controls.cuisineName.touched && recipeForm.controls.cuisineName.hasError('required')) {
+            <p class="field-error">Cuisine is required</p>
+          }
+        </div>
+      </div>
+
+      <div class="field-row three-col">
+        <div class="field">
+          <label class="field-label" for="prepTimeMinutes">Prep (min)</label>
+          <input
+            id="prepTimeMinutes"
+            type="number"
+            formControlName="prepTimeMinutes"
+            class="field-input"
+            min="1"
+          />
+          @if (recipeForm.controls.prepTimeMinutes.touched && recipeForm.controls.prepTimeMinutes.hasError('required')) {
+            <p class="field-error">Prep time is required</p>
+          } @else if (recipeForm.controls.prepTimeMinutes.touched && recipeForm.controls.prepTimeMinutes.hasError('min')) {
+            <p class="field-error">Minimum 1 minute</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="cookTimeMinutes">Cook (min)</label>
+          <input
+            id="cookTimeMinutes"
+            type="number"
+            formControlName="cookTimeMinutes"
+            class="field-input"
+            min="1"
+          />
+          @if (recipeForm.controls.cookTimeMinutes.touched && recipeForm.controls.cookTimeMinutes.hasError('required')) {
+            <p class="field-error">Cook time is required</p>
+          } @else if (recipeForm.controls.cookTimeMinutes.touched && recipeForm.controls.cookTimeMinutes.hasError('min')) {
+            <p class="field-error">Minimum 1 minute</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="servings">Servings</label>
+          <input
+            id="servings"
+            type="number"
+            formControlName="servings"
+            class="field-input"
+            min="1"
+          />
+          @if (recipeForm.controls.servings.touched && recipeForm.controls.servings.hasError('required')) {
+            <p class="field-error">Servings is required</p>
+          } @else if (recipeForm.controls.servings.touched && recipeForm.controls.servings.hasError('min')) {
+            <p class="field-error">Minimum 1 serving</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2 class="card-title">Hero image</h2>
+
+      <div class="field">
+        <label class="field-label" for="imageUrl">Image URL</label>
+        <input
+          id="imageUrl"
+          type="text"
+          formControlName="imageUrl"
+          class="field-input"
+          placeholder="https://..."
+        />
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-header">
+        <h2 class="card-title">Ingredients</h2>
+      </div>
+
+      <div formArrayName="ingredients" class="ingredient-rows">
+        @for (group of ingredients.controls; track $index) {
+          <div class="ingredient-row" [formGroupName]="$index">
+            <div class="field">
+              <label class="field-label" [attr.for]="'ing-name-' + $index">Name</label>
+              <input
+                [id]="'ing-name-' + $index"
+                type="text"
+                formControlName="name"
+                class="field-input"
+                placeholder="Eggs"
+              />
+              @if (group.get('name')?.touched && group.get('name')?.hasError('required')) {
+                <p class="field-error">Required</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field-label" [attr.for]="'ing-amount-' + $index">Amount</label>
+              <input
+                [id]="'ing-amount-' + $index"
+                type="number"
+                formControlName="amount"
+                class="field-input"
+                min="0"
+                step="0.1"
+              />
+              @if (group.get('amount')?.touched && group.get('amount')?.hasError('required')) {
+                <p class="field-error">Required</p>
+              } @else if (group.get('amount')?.touched && group.get('amount')?.hasError('min')) {
+                <p class="field-error">Min 0.1</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field-label" [attr.for]="'ing-unit-' + $index">Unit</label>
+              <input
+                [id]="'ing-unit-' + $index"
+                type="text"
+                formControlName="unit"
+                class="field-input"
+                placeholder="pcs"
+              />
+              @if (group.get('unit')?.touched && group.get('unit')?.hasError('required')) {
+                <p class="field-error">Required</p>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="remove-row-btn"
+              (click)="removeIngredient($index)"
+              [disabled]="ingredients.length <= 1"
+              aria-label="Remove ingredient row"
+            >
+              <img src="/assets/icons/delete.png" alt="" class="remove-icon" />
+            </button>
+          </div>
+        }
+        <div class="card-footer">
+          <button type="button" class="add-row-btn" (click)="addIngredient()">+ Add row</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2 class="card-title">Instructions</h2>
+      <div class="field">
+        <label class="field-label" for="instructions">Instructions</label>
+        <textarea
+          id="instructions"
+          formControlName="instructions"
+          class="field-textarea"
+          rows="8"
+          placeholder="Describe the steps..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <a routerLink="/recipes/me" class="btn btn-ghost">Cancel</a>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="submitting"
+      >
+        {{ submitting ? 'Saving...' : (isEditing ? 'Save changes' : 'Save') }}
+      </button>
+    </div>
+  </form>
+</section>

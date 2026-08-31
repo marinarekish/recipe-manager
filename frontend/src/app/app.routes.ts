@@ -14,6 +14,7 @@ import { VerifyCodeComponent } from './features/auth/verify-code/verify-code.com
 import { ExploreComponent } from './features/recipes/pages/explore/explore.component';
 import { MyRecipesComponent } from './features/recipes/pages/my-recipes/my-recipes.component';
 import { RecipeDetailComponent } from './features/recipes/pages/recipe-detail/recipe-detail.component';
+import { RecipeFormComponent } from './features/recipes/pages/recipe-form/recipe-form.component';
 
 export const routes: Routes = [
   {
@@ -24,6 +25,9 @@ export const routes: Routes = [
       { path: '', redirectTo: 'recipes', pathMatch: 'full' },
       // Static 'me' before ':id', otherwise "me" is parsed as an id.
       { path: 'recipes/me', component: MyRecipesComponent, data: { title: 'My Recipes' } },
+      // Create/edit are matched before ':id' so their static segments win.
+      { path: 'recipes/new', component: RecipeFormComponent, data: { title: 'Create Recipe' } },
+      { path: 'recipes/:id/edit', component: RecipeFormComponent, data: { title: 'Edit Recipe' } },
       {
         path: 'recipes/:id',
         component: RecipeDetailComponent,
