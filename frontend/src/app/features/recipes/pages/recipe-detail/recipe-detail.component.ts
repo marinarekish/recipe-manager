@@ -10,7 +10,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
   selector: 'app-recipe-detail',
   imports: [RouterLink],
   templateUrl: './recipe-detail.component.html',
-  styleUrls: ['./recipe-detail.component.scss']
+  styleUrl: './recipe-detail.component.scss'
 })
 
 export class RecipeDetailComponent implements OnInit {
@@ -46,16 +46,7 @@ export class RecipeDetailComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.loading = false;
-        this.recipe = null;
-
-        if (err.status === 404) {
-          this.errorMessage = "Could not find recipe";
-        } else if (err.status === 403) {
-          this.errorMessage = "You do not have access to this recipe.";
-        } else {
-          this.errorMessage = 'Could not load recipe. Please try again.';
-        }
+        this.handleSaveError(err);
       }
     })
   }
@@ -75,6 +66,25 @@ export class RecipeDetailComponent implements OnInit {
     return isAuthor || isAdmin;
   }
 
+  canEdit(): boolean {
+    const user = this.authService.currentUser();
+    const recipe = this.recipe;
+
+    if (!user || !recipe) {
+      return false;
+    }
+
+    return user.userId === recipe.authorId;
+  }
+
+  goBack(): void {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      void this.router.navigateByUrl('/recipes');
+    }
+  }
+
   delete() {
     if (!this.recipe || !this.canManage()) {
       return;
@@ -90,14 +100,20 @@ export class RecipeDetailComponent implements OnInit {
         void this.router.navigateByUrl(`/recipes/me`);
       },
       error: (err) => {
-        if (err.status === 403) {
-          this.errorMessage = 'You cannot delete this recipe.';
-        } else if (err.status === 404) {
-          this.errorMessage = 'Recipe was not found.';
-        } else {
-          this.errorMessage = 'Could not delete recipe. Please try again.';
-        }
+        this.handleSaveError(err);
       }
     })
+  }
+
+  private handleSaveError(err: { status?: number; error?: unknown }): void {
+    if (err.status === 400) {
+      this.errorMessage = 'Please check the form. Some values are invalid.';
+    } else if (err.status === 403) {
+      this.errorMessage = 'You cannot save this recipe.';
+    } else if (err.status === 404) {
+      this.errorMessage = 'Recipe was not found.';
+    } else {
+      this.errorMessage = 'Could not save recipe. Please try again.';
+    }
   }
 }

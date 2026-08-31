@@ -15,6 +15,10 @@
     font-weight: 500;
     padding: 6px 10px;
     border-radius: 10px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
     transition: color 0.2s ease, background-color 0.2s ease;
 
     .back-icon {
@@ -212,6 +216,7 @@
     font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
     transition: all 0.2s ease;
 
     .action-icon {
