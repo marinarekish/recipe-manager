@@ -1,8 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 import { RecipeService } from '../../data/recipe.service';
 import { Recipe } from '../../data/recipe.models';
 import { RecipeGridComponent } from '../../../../shared/components/recipe-grid/recipe-grid.component';
+import { FavoriteService } from '../../../favorites/data/favorite.service';
 
 @Component({
   selector: 'app-explore',
@@ -13,8 +15,10 @@ import { RecipeGridComponent } from '../../../../shared/components/recipe-grid/r
 })
 export class ExploreComponent implements OnInit {
   private readonly recipeService = inject(RecipeService);
+  private readonly favoriteService = inject(FavoriteService);
 
   recipes: Recipe[] = [];
+  favoriteIds = new Set<number>();
   loading = true;
   errorMessage = '';
 
@@ -26,9 +30,14 @@ export class ExploreComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.recipeService.getAll().subscribe({
-      next: (data) => {
-        this.recipes = data;
+    // Load recipes and favorited ids in parallel.
+    forkJoin({
+      recipes: this.recipeService.getAll(),
+      favorites: this.favoriteService.getAllFavorites(),
+    }).subscribe({
+      next: ({ recipes, favorites }) => {
+        this.recipes = recipes;
+        this.favoriteIds = new Set((favorites ?? []).map((f) => f.recipeId));
         this.loading = false;
       },
       error: () => {
@@ -39,7 +48,25 @@ export class ExploreComponent implements OnInit {
   }
 
   onFavoriteToggle(recipeId: number): void {
-    // later: FavoriteService.add / remove
-    console.log('favorite toggle', recipeId);
+    if (this.favoriteIds.has(recipeId)) {
+      this.favoriteService.remove(recipeId).subscribe({
+        next: () => {
+          this.favoriteIds.delete(recipeId);
+        },
+        error: () => {
+          this.errorMessage = 'Could not remove from favorites.';
+        },
+      });
+      return;
+    }
+
+    this.favoriteService.add({ recipeId }).subscribe({
+      next: () => {
+        this.favoriteIds.add(recipeId);
+      },
+      error: () => {
+        this.errorMessage = 'Could not add to favorites.';
+      },
+    });
   }
 }

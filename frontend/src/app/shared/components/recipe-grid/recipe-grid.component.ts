@@ -13,6 +13,8 @@ export class RecipeGridComponent {
   @Input() recipes: Recipe[] = [];
   @Input() loading = false;
   @Input() errorMessage = '';
+  @Input() emptyMessage = 'No recipes found.';
+  @Input() favoriteIds: Set<number> = new Set();
 
   @Output() favoriteToggle = new EventEmitter<number>();
 

@@ -9,14 +9,14 @@
   </div>
 } @else if (recipes.length === 0) {
   <div class="state-container">
-    <p class="state-text">No recipes found.</p>
+    <p class="state-text">{{ emptyMessage }}</p>
   </div>
 } @else {
   <div class="recipe-grid">
     @for (recipe of recipes; track recipe.recipeId) {
       <app-recipe-card
         [recipe]="recipe"
-        [isFavorite]="false"
+        [isFavorite]="favoriteIds.has(recipe.recipeId)"
         (favoriteToggle)="onFavoriteToggle($event)"
       />
     }

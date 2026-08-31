@@ -1,15 +1,13 @@
-<section class="recipes-page">
+<section class="favorites-page">
   <header class="page-header">
-    <h1>My Recipes</h1>
-    <a routerLink="/recipes/new" class="create-btn">
-      <span>+</span> Create a recipe
-    </a>
+    <h1>Favorites</h1>
   </header>
 
   <app-recipe-grid
     [recipes]="recipes"
     [loading]="loading"
     [errorMessage]="errorMessage"
+    [emptyMessage]="'No favorites yet'"
     [favoriteIds]="favoriteIds"
     (favoriteToggle)="onFavoriteToggle($event)"
   />
