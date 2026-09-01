@@ -1,0 +1,112 @@
+<section class="profile-page">
+  <div class="profile-topbar">
+    <h1 class="page-title">Profile</h1>
+  </div>
+
+  @if (!user) {
+    <div class="profile-card">
+      @if (errorMessage) {
+        <div class="form-alert error" role="alert">{{ errorMessage }}</div>
+      } @else {
+        <div class="profile-state">
+          <div class="spinner"></div>
+          <p class="state-text">Loading profile...</p>
+        </div>
+      }
+    </div>
+  } @else {
+    <form
+      [formGroup]="userForm"
+      (ngSubmit)="submit()"
+      class="profile-form"
+      novalidate
+    >
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="avatar" aria-hidden="true">{{ initials }}</div>
+          <div class="profile-identity">
+            <span class="profile-name">{{ user.firstName }} {{ user.lastName }}</span>
+            <span class="role-badge" [class.admin]="isAdmin">
+              {{ isAdmin ? 'Admin' : 'User' }}
+            </span>
+          </div>
+        </div>
+
+        @if (errorMessage) {
+          <div class="form-alert error" role="alert">{{ errorMessage }}</div>
+        }
+
+        <div class="field">
+          <label class="field-label" for="firstName">First name</label>
+          <input
+            id="firstName"
+            type="text"
+            formControlName="firstName"
+            class="field-input"
+            placeholder="First name"
+          />
+          @if (userForm.controls.firstName.touched && userForm.controls.firstName.hasError('required')) {
+            <p class="field-error">First name is required</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="lastName">Last name</label>
+          <input
+            id="lastName"
+            type="text"
+            formControlName="lastName"
+            class="field-input"
+            placeholder="Last name"
+          />
+          @if (userForm.controls.lastName.touched && userForm.controls.lastName.hasError('required')) {
+            <p class="field-error">Last name is required</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="email">Email</label>
+          <input
+            id="email"
+            type="text"
+            class="field-input field-input-readonly"
+            [value]="user.email"
+            readonly
+            disabled
+          />
+          <p class="field-hint">Email cannot be changed</p>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="phone">Phone</label>
+          <input
+            id="phone"
+            type="text"
+            formControlName="phone"
+            class="field-input"
+            placeholder="+1 555 000 0000"
+          />
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="deleteAccount()"
+          [disabled]="submitting"
+        >
+          Delete account
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="submitting"
+        >
+          {{ submitting ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
