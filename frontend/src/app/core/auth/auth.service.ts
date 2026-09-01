@@ -75,6 +75,10 @@ export class AuthService {
     this.currentUser.set(auth.user);
   }
 
+  updateCurrentUser(user: UserDto) {
+    this.currentUser.set(user);
+  }
+
   // logout and delete all info
   logout(){
     localStorage.removeItem(TOKEN_KEY);

@@ -15,7 +15,8 @@ import { ExploreComponent } from './features/recipes/pages/explore/explore.compo
 import { MyRecipesComponent } from './features/recipes/pages/my-recipes/my-recipes.component';
 import { RecipeDetailComponent } from './features/recipes/pages/recipe-detail/recipe-detail.component';
 import { RecipeFormComponent } from './features/recipes/pages/recipe-form/recipe-form.component';
-import {FavoritesListComponent} from './features/favorites/pages/favorites-list/favorites-list.component';
+import { FavoritesListComponent } from './features/favorites/pages/favorites-list/favorites-list.component';
+import { ProfileComponent } from './features/profile/pages/profile/profile.component';
 
 export const routes: Routes = [
   {
@@ -24,9 +25,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'recipes', pathMatch: 'full' },
-      // Static 'me' before ':id', otherwise "me" is parsed as an id.
       { path: 'recipes/me', component: MyRecipesComponent, data: { title: 'My Recipes' } },
-      // Create/edit are matched before ':id' so their static segments win.
       { path: 'recipes/new', component: RecipeFormComponent, data: { title: 'Create Recipe' } },
       { path: 'recipes/:id/edit', component: RecipeFormComponent, data: { title: 'Edit Recipe' } },
       {
@@ -37,7 +36,7 @@ export const routes: Routes = [
       },
       { path: 'recipes', component: ExploreComponent, data: { title: 'Explore' } },
       { path: 'favorites', component: FavoritesListComponent, data: { title: 'Favorites' } },
-      { path: 'profile', component: PlaceholderComponent, data: { title: 'Profile' } },
+      { path: 'profile', component: ProfileComponent, data: { title: 'Profile' } },
       {
         path: 'admin/users',
         component: PlaceholderComponent,
