@@ -12,8 +12,21 @@ the full mapping.
 
 ## Authorization
 
-All endpoints require a valid JWT Bearer token except `/api/auth/*`.
-Admin-only endpoints use `[Authorize(Roles = "Administrator")]`.
+Requires a valid JWT Bearer token:
+
+- All `/api/recipes/*`, `/api/favorites/*`, and `/api/users/*` endpoints.
+
+Anonymous (no token needed):
+
+- `/api/auth/*`
+- `GET` and `POST get-or-create` on `/api/categories`,
+  `/api/cuisines`, `/api/ingredients` (public reference-data lookup)
+
+Admin-only endpoints use `[Authorize(Roles = "Administrator")]`:
+the `DELETE` on `/api/categories|/api/cuisines|/api/ingredients/{id}`
+and all `/api/users` management endpoints (`GET /api/users`,
+`GET /api/users/{id}`, `PUT /api/users/{id}/role`,
+`DELETE /api/users/{id}`).
 
 Obtain a token via `POST /api/auth/verify-code`, then pass it in the
 `Authorization` header:
@@ -23,7 +36,7 @@ Authorization: Bearer {token}
 ```
 
 User identity is derived from JWT claims (`sub` = userId, `role` = role).
-No `[Authorize]` means anonymous access (auth endpoints only).
+No `[Authorize]` means anonymous access (the endpoints listed above).
 
 ---
 
@@ -59,9 +72,7 @@ After registering, call `POST /api/auth/request-code` then
 
 ### `POST /api/auth/request-code`
 
-Issues a 6-digit login code for the given email. Returns the same
-response whether the email exists or not (to prevent user enumeration
-at the HTTP level — the service layer distinguishes internally).
+Issues a 6-digit login code for the given email.
 
 Request:
 
@@ -71,6 +82,12 @@ Request:
 
 - **200** — `{ "message": "If the account exists, a login code has been issued." }`
 - **404** — email not found
+
+The 200 response uses a generic message rather than echoing the email, but
+the HTTP status still differs between an existing and a missing account
+(200 vs 404), so the endpoint is not fully anti-enumeration at the HTTP
+level. The frontend uses the 404 to tell the user no account exists for
+that email.
 
 ### `POST /api/auth/verify-code`
 

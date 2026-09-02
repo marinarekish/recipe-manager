@@ -5,26 +5,25 @@ including database, auth, and data prerequisites.
 
 ## Ports & URLs
 
-| Service    | URL                        | Notes                         |
-| ---------- | -------------------------- | ----------------------------- |
-| PostgreSQL | `localhost:5432`           | Default port                  |
-| API        | `http://localhost:5053`     | HTTP (see `launchSettings.json`) |
-| API (HTTPS)| `https://localhost:7151`   | Optional                      |
-| Swagger    | `http://localhost:5053/swagger` | Development only          |
-| Frontend   | `http://localhost:4200`     | Angular dev server (`ng serve`) |
+| Service     | URL                             | Notes                            |
+| ----------- | ------------------------------- | -------------------------------- |
+| PostgreSQL  | `localhost:5432`                | Default port                     |
+| API         | `http://localhost:5053`         | HTTP (see `launchSettings.json`) |
+| API (HTTPS) | `https://localhost:7151`        | Optional                         |
+| Swagger     | `http://localhost:5053/swagger` | Development only                 |
+| Frontend    | `http://localhost:4200`         | Angular dev server (`ng serve`)  |
 
-CORS is configured for `http://localhost:4200` (Angular) and
-`http://localhost:5173` (Vite, if used). See the [CORS section](#cors)
-below.
+CORS is configured for the Angular dev origin `http://localhost:4200`.
+See the [CORS section](#cors) below.
 
 ## Prerequisites
 
-| Requirement | Version | Check |
-| ----------- | ------- | ----- |
-| .NET SDK    | 10.0    | `dotnet --version` |
-| Node.js     | ≥ 18    | `node --version` |
-| npm         | ≥ 8     | `npm --version` |
-| PostgreSQL  | recent  | Running on `localhost:5432` |
+| Requirement | Version | Check                                    |
+| ----------- | ------- | ---------------------------------------- |
+| .NET SDK    | 10.0    | `dotnet --version`                       |
+| Node.js     | ≥ 18    | `node --version`                         |
+| npm         | ≥ 8     | `npm --version`                          |
+| PostgreSQL  | recent  | Running on `localhost:5432`              |
 | `dotnet-ef` | latest  | `dotnet tool install --global dotnet-ef` |
 
 ## How to run
@@ -112,13 +111,14 @@ frontend/src/environments/
 
 Angular CLI swaps these automatically via `fileReplacements` in
 `angular.json`:
+
 - `ng serve` uses `environment.development.ts`
 - `ng build` uses `environment.ts`
 
 Import and use in services:
 
 ```typescript
-import { environment } from '../../environments/environment';
+import { environment } from "../../environments/environment";
 
 const url = `${environment.apiBaseUrl}/api/recipes`;
 ```
@@ -128,8 +128,9 @@ const url = `${environment.apiBaseUrl}/api/recipes`;
 ## Authentication (passwordless login)
 
 There is no password-based login. Users authenticate with an email
-+ one-time 6-digit code. See `docs/auth-flow.md` for the full
-design.
+
+- one-time 6-digit code. See `docs/auth-flow.md` for the full
+  design.
 
 ### Step 1 — Request a code
 
@@ -193,12 +194,12 @@ all previous active codes for that user.
 
 ## Data prerequisites
 
-| Requirement | How to satisfy |
-| ----------- | -------------- |
-| PostgreSQL running | Start PostgreSQL on `localhost:5432` |
-| Database created + migrations applied | `dotnet ef database update` (see above) |
-| At least one user in DB | `POST /api/auth/register` (see above) |
-| JWT key configured | `Jwt:Key` in `appsettings.Development.json` (≥ 32 chars) |
+| Requirement                           | How to satisfy                                           |
+| ------------------------------------- | -------------------------------------------------------- |
+| PostgreSQL running                    | Start PostgreSQL on `localhost:5432`                     |
+| Database created + migrations applied | `dotnet ef database update` (see above)                  |
+| At least one user in DB               | `POST /api/auth/register` (see above)                    |
+| JWT key configured                    | `Jwt:Key` in `appsettings.Development.json` (≥ 32 chars) |
 
 ### JWT settings
 
@@ -228,9 +229,10 @@ for local development.
 
 ## CORS
 
-The backend CORS policy (`"FrontendDevelopment"`) allows `http://localhost:4200`
-by default. Origins are configured in the `Cors:Origins` array in
-`appsettings.Development.json` (see `docs/backend-runbook.md`).
+The backend CORS policy (`"FrontendDevelopment"`) allows
+`http://localhost:4200` (Angular dev server). Origins are configured in the
+`Cors:Origins` array in `appsettings.Development.json`
+(see `docs/backend-runbook.md`).
 
 Allowed headers: `Authorization`, `Content-Type`.
 Allowed methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`.
@@ -238,54 +240,87 @@ Allowed methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`.
 If you change the Angular dev server port, add the new origin to that
 array.
 
-## Folder structure
+## Folder structure (current)
 
 ```
 frontend/src/
 ├── app/
-│   ├── core/          # future: auth, interceptors, app-wide services
-│   ├── shared/        # future: reusable UI components, pipes, directives
-│   ├── features/      # future: auth, recipes, favorites, admin
-│   ├── app.component.ts
-│   ├── app.component.html
-│   ├── app.component.scss
-│   ├── app.config.ts
-│   └── app.routes.ts
-├── environments/      # environment.ts / environment.development.ts
+│   ├── core/
+│   │   ├── auth/               # AuthService, auth models, authGuard, adminGuard, interceptor
+│   │   └── recipes/            # recipeIdGuard (route param validation)
+│   ├── shared/
+│   │   └── components/         # recipe-card, recipe-grid, placeholder
+│   ├── features/
+│   │   ├── auth/               # login, register, verify-code pages
+│   │   ├── layout/             # app shell (sidebar + router outlet)
+│   │   ├── recipes/            # data/ (service + models) + pages/ (explore, detail, form, my-recipes)
+│   │   ├── favorites/          # data/ + pages/ (favorites-list)
+│   │   └── profile/            # data/ + pages/ (profile)
+│   ├── app.component.ts / .html / .scss
+│   ├── app.config.ts           # provideRouter, provideHttpClient + interceptor
+│   └── app.routes.ts           # route definitions + guards
+├── environments/               # environment.ts / environment.development.ts
 ├── index.html
-├── main.ts            # standalone bootstrap
-└── styles.scss        # global styles + Material theme
+├── main.ts                     # standalone bootstrap
+└── styles.scss                 # global styles (Roboto, body reset)
 ```
 
-Empty directories (`core/`, `shared/`, `features/`) contain `.gitkeep`
-placeholders.
+Feature modules follow a `data/` (API services + models) and `pages/`
+(view components) split. `core/` holds cross-cutting auth, `shared/`
+holds reusable presentational components.
 
-## Stack
+## Stack (current)
 
 - **Angular 19** (standalone application, no NgModules)
-- **TypeScript 5.7**
+- **TypeScript 5.7** (strict mode)
 - **Angular Router** (`provideRouter`)
 - **Angular Material + CDK** (azure-blue prebuilt theme)
 - **RxJS 7.8** (ships with Angular)
 - **SCSS** as the style language
-- **`provideHttpClient()`** wired in app config (no API calls yet)
+- **`provideHttpClient(withInterceptors([authInterceptor]))`** wired in
+  `app.config.ts` — the interceptor attaches the stored JWT to each request
+
+## Implemented frontend behavior
+
+- **Authentication UI** — register, login (request code), and verify-code
+  pages. The register page chains registration with a login-code request and
+  routes to the verify page. Codes are entered on `/verify?email=...`.
+- **Session state** — `AuthService` keeps the current user in an Angular
+  signal and persists the JWT + user profile in `localStorage`
+  (`rm_access_token`, `rm_user`); the session is restored on reload.
+- **Guards** — `authGuard` protects the application layout and redirects
+  anonymous users to `/login`; `adminGuard` restricts the admin route to
+  users with the `Administrator` role; `recipeIdGuard` validates the
+  `:id` route parameter.
+- **Routes** — protected area: `/recipes` (Explore), `/recipes/me`
+  (My Recipes), `/recipes/new` (create), `/recipes/:id`,
+  `/recipes/:id/edit`, `/favorites`, `/profile`, `/admin/users`
+  (placeholder). Public: `/login`, `/register`, `/verify`.
+- **Recipe screens** — explore list, my-recipes list, detail page, and a
+  create/edit form with dynamic ingredient rows.
+- **Favorites** — favorites list and heart toggle on recipe cards/detail.
+- **Profile** — view/update the current user and delete their own account.
 
 ## What is NOT implemented yet
 
-- JWT storage, auth guards, HTTP interceptors
-- Recipe, favorite, user, or admin screens
-- API service layer or HTTP calls
-- Reactive Forms (available via `@angular/forms`; wire up when needed)
-- NgRx state management
-- SSR / PWA
-- Unit / e2e tests
+- **Frontend unit / e2e tests** — Jasmine + Karma are configured
+  (`ng test`), but no spec files exist yet. Deferred.
+- **Admin user-management UI** — the route exists but renders a
+  placeholder component.
+- **NgRx state management** — auth state uses Angular signals.
+- **SSR / PWA**.
+- **`returnUrl` deep-links** — `authGuard` writes a `returnUrl` query
+  parameter, but no page consumes it yet; after login the user is routed
+  to the recipes area.
+- **Global expired-JWT (401) handling** — components show local error
+  messages; there is no automatic redirect or refresh flow.
 
 ## Further reading
 
-| Document | Contents |
-| -------- | -------- |
-| `docs/backend-runbook.md` | Backend setup, migrations, conventions |
-| `docs/api.md` | Full REST API contract |
-| `docs/auth-flow.md` | Passwordless login design |
-| `docs/result-convention.md` | Result pattern → HTTP mapping |
-| `docs/domain_model.md` | Entity relationships |
+| Document                    | Contents                               |
+| --------------------------- | -------------------------------------- |
+| `docs/backend-runbook.md`   | Backend setup, migrations, conventions |
+| `docs/api.md`               | Full REST API contract                 |
+| `docs/auth-flow.md`         | Passwordless login design              |
+| `docs/result-convention.md` | Result pattern → HTTP mapping          |
+| `docs/domain_model.md`      | Entity relationships                   |

@@ -4,6 +4,7 @@
 --   20260806104603_AddLoginTokens
 --   20260810120655_FixPendingModelChanges
 --   20260813075849_WidenIngredientAmount
+--   20260821155107_AddRecipeImageUrl
 -- If you change the EF model, regenerate instead of editing by hand:
 --   dotnet ef migrations script --idempotent --project RecipeManager.Infrastructure --startup-project RecipeManager.Api
 
@@ -69,6 +70,7 @@ CREATE TABLE recipes (
     cook_time_minutes int NOT NULL,
     servings int NOT NULL,
     instructions text NULL,
+    image_url varchar(2048) NULL,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT PK_recipes PRIMARY KEY (recipe_id),
@@ -158,4 +160,6 @@ CREATE INDEX IX_recipe_ingredients_ingredient_id ON recipe_ingredients (ingredie
 -- ingredients: Milk, Sugar, Potato, Rice, Sour cream, Salt, Egg, Pork meat, Cheese,
 --              Chicken breast, Tomato, Carrot, Olive Oil, Pepperoni (ids 1-14)
 -- roles: Administrator (1), User (2)
--- users are NOT seeded; the current RecipeController stub assumes user id 1 exists.
+-- users are NOT seeded. Create an account via POST /api/auth/register,
+-- then optionally assign the Administrator role:
+--   INSERT INTO users_roles (user_id, role_id) VALUES (<user_id>, 1);

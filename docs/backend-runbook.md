@@ -16,12 +16,12 @@ dotnet tool install --global dotnet-ef
 
 ```
 backend/
-├── RecipeManager.slnx              # solution (new XML format)
+├── RecipeManager.slnx              # solution
 ├── RecipeManager.Api               # ASP.NET Core host + controllers (net10.0)
 ├── RecipeManager.Application       # services, interfaces, DTOs, AutoMapper
 ├── RecipeManager.Domain            # entities (no dependencies)
 ├── RecipeManager.Infrastructure    # EF Core DbContext, configs, migrations
-└── RecipeManager.Tests             # test project (not yet wired to the app)
+├── RecipeManager.Tests             # xUnit + NSubstitute + EF InMemory service tests
 ```
 
 Dependency direction: `Api → Application → (Domain, Infrastructure)`.
@@ -32,12 +32,7 @@ Dependency direction: `Api → Application → (Domain, Infrastructure)`.
 
 `appsettings.json` leaves the connection string empty. Set it in
 Development via `appsettings.Development.json` (already populated for a
-local install) or user-secrets:
-
-```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=recipe_manager;Username=postgres;Password=postgres"
-```
+local install) or user-secrets.
 
 The connection is resolved in `Program.cs` as
 `GetConnectionString("DefaultConnection")`.
@@ -57,18 +52,20 @@ This applies the existing migrations:
 2. `20260806104603_AddLoginTokens`
 3. `20260810120655_FixPendingModelChanges`
 4. `20260813075849_WidenIngredientAmount`
+5. `20260821155107_AddRecipeImageUrl`
 
 Migrations seed lookup data automatically: categories, cuisines,
-ingredients, and roles (`Administrator`, `User`).
+ingredients, and roles (`Administrator`, `User`). They also add the
+recipe `image_url` column (optional).
 
-> **Note:** users are **not** seeded. Insert a user manually for recipe
-> CRUD to work, e.g.:
+> **Note:** users are **not** seeded. There is no application logic or
+> seed that creates an initial administrator user. Create an account via
+> `POST /api/auth/register`, then grant the `Administrator` role if
+> needed, e.g.:
 >
 > ```sql
-> INSERT INTO users (first_name, last_name, email, created_at, updated_at)
-> VALUES ('Admin', 'Admin', 'admin@example.com', now(), now());
-> -- role assignment (optional)
-> INSERT INTO users_roles (user_id, role_id) VALUES (1, 1);
+> INSERT INTO users_roles (user_id, role_id) SELECT 1, 1
+> WHERE NOT EXISTS (SELECT 1 FROM users_roles WHERE user_id = 1 AND role_id = 1);
 > ```
 
 ## 3. Run the API
@@ -90,10 +87,7 @@ the `Cors` section in `appsettings.json` / `appsettings.Development.json`:
 ```json
 {
   "Cors": {
-    "Origins": [
-      "http://localhost:5173",
-      "http://localhost:4200"
-    ]
+    "Origins": ["http://localhost:4200"]
   }
 }
 ```
@@ -102,10 +96,6 @@ Allowed origins, headers (`Authorization`, `Content-Type`), and methods
 (`GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`) are all config-driven.
 The CORS policy is applied before authentication in the middleware pipeline
 so preflight `OPTIONS` requests succeed without a token.
-
-> **Note:** The `appsettings.Development.json` file is git-ignored.
-> Copy `appsettings.Development.json.example` if it does not exist.
-> The origins above cover Vite (`:5173`) and Angular (`:4200`) dev servers.
 
 ## Migrations workflow
 
@@ -153,10 +143,11 @@ CI so drift cannot slip in silently.
   instead of throwing exceptions or returning `null`. Controllers map
   these to HTTP via `ToActionResult()` — no per-exception `try/catch`
   blocks. See `result-convention.md`.
-- **JWT Bearer auth** — endpoints require a valid JWT token except
-  `/api/auth/*`. Identity comes from JWT claims (`sub` = userId,
-  `role` = role). Admin-only endpoints use
-  `[Authorize(Roles = "Administrator")]`.
+- **JWT Bearer auth** — recipe, favorite, and user endpoints require a
+  valid JWT token; identity comes from JWT claims (`sub` = userId,
+  `role` = role). `/api/auth/*` and the reference-data GET +
+  get-or-create endpoints (categories/cuisines/ingredients) are anonymous.
+  Admin-only endpoints use `[Authorize(Roles = "Administrator")]`.
 - **EF Configurations** — one `IEntityTypeConfiguration<T>` per entity in
   `RecipeManager.Infrastructure/Configurations`, registered via
   `ApplyConfigurationsFromAssembly` in `ApplicationDbContext`.

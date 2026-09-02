@@ -6,7 +6,7 @@ Recipe Manager is a full-stack web application for storing, organizing, and brow
 
 The application allows users to create recipes, categorize them by cuisine and category, manage ingredients, and save favorite recipes for quick access.
 
-The primary goal of the project is to serve as a learning platform for modern full-stack development using ASP.NET Core, Entity Framework Core, PostgreSQL, React, and TypeScript while following clean architectural principles.
+The primary goal of the project is to serve as a learning platform for modern full-stack development using ASP.NET Core, Entity Framework Core, PostgreSQL, Angular, and TypeScript while following clean architectural principles.
 
 ---
 
@@ -48,7 +48,7 @@ Responsibilities:
 Examples:
 
 - User
-- Admin
+- Administrator
 
 ### Attributes
 
@@ -84,6 +84,7 @@ Responsibilities:
 | cook_time_minutes | Cooking time          |
 | servings          | Number of servings    |
 | instructions      | Cooking instructions  |
+| image_url         | Optional image URL (≤ 2048 chars) |
 | created_at        | Creation timestamp    |
 | updated_at        | Last update timestamp |
 
@@ -248,18 +249,22 @@ A user creates a recipe by providing:
 - cooking time
 - servings
 - instructions
-- ingredients
+- optional image URL
+- ingredients (with amount and unit)
+
+Category, cuisine, and ingredients are supplied by id **or** name. When a
+name is used, the lookup value is resolved via `get-or-create`, so recipes
+can extend the reference-data collections with new names without
+duplication.
 
 ---
 
 ## Browse Recipes
 
-Users can browse recipes by:
+Authenticated users can view all recipes and any single recipe.
 
-- category
-- cuisine
-
-Future versions may include:
+Filtering and search (by category, cuisine, ingredient, etc.) are not yet
+implemented:
 
 - search
 - sorting
@@ -334,6 +339,7 @@ Optional fields:
 
 - phone
 - instructions
+- image_url
 
 ---
 
@@ -422,7 +428,8 @@ Ingredient quantities are stored in the junction table because they depend on a 
 
 Possible future improvements include:
 
-- Recipe images
+- Recipe image upload/storage (recipes currently store an optional image
+  URL only; the frontend falls back to a placeholder)
 - Recipe comments
 - Ratings and reviews
 - Step-by-step cooking instructions
