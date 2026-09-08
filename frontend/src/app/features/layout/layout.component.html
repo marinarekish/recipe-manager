@@ -32,6 +32,24 @@
       </a>
     </nav>
 
+    @if (isAdmin) {
+      <div class="admin-section">
+        <span class="admin-label">Admin</span>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
+          <span class="nav-label">Users</span>
+        </a>
+        <a routerLink="/admin/recipes" routerLinkActive="active" class="nav-item">
+          <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
+          <span class="nav-label">Recipes</span>
+        </a>
+        <a routerLink="/admin/lookups" routerLinkActive="active" class="nav-item">
+          <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
+          <span class="nav-label">Lookups</span>
+        </a>
+      </div>
+    }
+
     <div class="sidebar-footer">
       <div class="user-profile">
         <div class="avatar">{{ initial() }}</div>

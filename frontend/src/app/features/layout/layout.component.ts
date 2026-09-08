@@ -15,6 +15,10 @@ export class LayoutComponent {
 
   readonly user = this.authService.currentUser;
 
+  get isAdmin(): boolean {
+    return this.user()?.roles?.some((r) => r.name === 'Administrator') ?? false;
+  }
+
   logout(): void {
     this.authService.logout();
     void this.router.navigateByUrl('/login');
