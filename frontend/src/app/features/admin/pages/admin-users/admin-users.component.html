@@ -1,0 +1,58 @@
+<section class="admin-users-page">
+  <div class="page-topbar">
+    <h1 class="page-title">Users</h1>
+  </div>
+
+  @if (errorMessage) {
+    <div class="form-alert error" role="alert">{{ errorMessage }}</div>
+  }
+
+  <div class="card">
+    @if (loading) {
+      <div class="state">
+        <div class="spinner"></div>
+        <p class="state-text">Loading users...</p>
+      </div>
+    } @else if (users.length === 0) {
+      <div class="state">
+        <p class="state-text">No users found.</p>
+      </div>
+    } @else {
+      <ul class="user-list">
+        @for (user of users; track user.userId) {
+          <li class="user-row">
+            <div class="avatar">{{ initials(user) }}</div>
+            <div class="user-main">
+              <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+              <span class="user-email">{{ user.email }}</span>
+            </div>
+            <div class="user-role">
+              <select
+                class="role-select"
+                [ngModel]="roleIdOf(user)"
+                (ngModelChange)="onRoleChange(user, $event)"
+                [disabled]="busyUsers.has(user.userId)"
+                [attr.aria-label]="'Role for ' + user.firstName + ' ' + user.lastName"
+              >
+                <option [ngValue]="ROLE_ADMIN">Administrator</option>
+                <option [ngValue]="ROLE_USER">User</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              class="delete-btn"
+              (click)="delete(user)"
+              [disabled]="busyUsers.has(user.userId)"
+              [attr.aria-label]="'Delete ' + user.firstName + ' ' + user.lastName"
+            >
+              <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+              Delete
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <p class="hint">The system keeps at least one administrator.</p>
+</section>

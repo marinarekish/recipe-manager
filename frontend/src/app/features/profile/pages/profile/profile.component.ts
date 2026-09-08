@@ -122,11 +122,11 @@ export class ProfileComponent implements OnInit {
     }
 
     this.submitting = true;
-    this.deleteUser(this.user);
+    this.deleteUser();
   }
 
-  private deleteUser(user: UserDto) {
-    this.userService.delete(user.userId).subscribe({
+  private deleteUser() {
+    this.userService.deleteMe().subscribe({
       next: () => {
         this.submitting = false;
 

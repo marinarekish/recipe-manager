@@ -21,6 +21,10 @@ export class UserService {
     return this.http.put<UserDto>(`${this.baseUrl}/me`, body);
   }
 
+  deleteMe(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/me`);
+  }
+
   delete(id: number): Observable<void>{
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
