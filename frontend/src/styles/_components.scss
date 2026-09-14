@@ -5,6 +5,19 @@
   color: var(--mise-text);
 }
 
+.page-subtitle {
+  margin: 6px 0 0 0;
+  font-size: 0.95rem;
+  color: var(--mise-text-muted);
+}
+
+.content-width {
+  width: 100%;
+  max-width: var(--mise-content-max-width);
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
 .page-topbar,
 .page-header {
   display: flex;
