@@ -12,7 +12,6 @@ import { AdminRecipesService } from '../../data/admin-recipe.service';
 })
 
 export class AdminRecipesComponent implements OnInit {
-
   private readonly adminRecipeService = inject(AdminRecipesService)
 
   recipes: Recipe[] = [];

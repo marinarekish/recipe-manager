@@ -1,0 +1,146 @@
+<section class="admin-lookups-page">
+  <div class="page-topbar">
+    <h1 class="page-title">Lookups</h1>
+  </div>
+
+  <div class="lookups-card">
+    <div class="tabs" role="tablist">
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        [class.active]="currentTab === ActiveTab.categories"
+        (click)="switchTab(ActiveTab.categories)"
+      >
+        Categories
+      </button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        [class.active]="currentTab === ActiveTab.cuisines"
+        (click)="switchTab(ActiveTab.cuisines)"
+      >
+        Cuisines
+      </button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        [class.active]="currentTab === ActiveTab.ingredients"
+        (click)="switchTab(ActiveTab.ingredients)"
+      >
+        Ingredients
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="form-alert error" role="alert">{{ errorMessage }}</div>
+    }
+
+    <div class="tab-content">
+      @if (loading) {
+        <div class="state">
+          <div class="spinner"></div>
+          <p class="state-text">Loading...</p>
+        </div>
+      } @else if (currentTab === ActiveTab.categories) {
+        @if (categories.length === 0) {
+          <div class="state"><p class="state-text">No categories found.</p></div>
+        } @else {
+          <div class="table-wrap">
+            <table class="lookup-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col" class="actions-col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (category of categories; track category.categoryId) {
+                  <tr>
+                    <td>{{ category.name }}</td>
+                    <td class="actions-col">
+                      <button
+                        type="button"
+                        class="delete-btn"
+                        (click)="deleteItem(category.categoryId)"
+                        [attr.aria-label]="'Delete ' + category.name"
+                      >
+                        <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      } @else if (currentTab === ActiveTab.cuisines) {
+        @if (cuisines.length === 0) {
+          <div class="state"><p class="state-text">No cuisines found.</p></div>
+        } @else {
+          <div class="table-wrap">
+            <table class="lookup-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col" class="actions-col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cuisine of cuisines; track cuisine.cuisineId) {
+                  <tr>
+                    <td>{{ cuisine.name }}</td>
+                    <td class="actions-col">
+                      <button
+                        type="button"
+                        class="delete-btn"
+                        (click)="deleteItem(cuisine.cuisineId)"
+                        [attr.aria-label]="'Delete ' + cuisine.name"
+                      >
+                        <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      } @else if (currentTab === ActiveTab.ingredients) {
+        @if (ingredients.length === 0) {
+          <div class="state"><p class="state-text">No ingredients found.</p></div>
+        } @else {
+          <div class="table-wrap">
+            <table class="lookup-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col" class="actions-col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (ingredient of ingredients; track ingredient.ingredientId) {
+                  <tr>
+                    <td>{{ ingredient.name }}</td>
+                    <td class="actions-col">
+                      <button
+                        type="button"
+                        class="delete-btn"
+                        (click)="deleteItem(ingredient.ingredientId)"
+                        [attr.aria-label]="'Delete ' + ingredient.name"
+                      >
+                        <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</section>
