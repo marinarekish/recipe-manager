@@ -38,7 +38,7 @@ export class AdminRecipesComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Unable to load recipes.';
+        this.errorMessage = 'Could not load recipes. Please try again.';
       }
     })
   }
@@ -51,9 +51,10 @@ export class AdminRecipesComponent implements OnInit {
     this.adminRecipeService.deleteRecipe(recipe.recipeId).subscribe({
       next: () => {
         this.recipes = this.recipes.filter((r) => r.recipeId !== recipe.recipeId);
+        this.applyFilter();
       },
       error: () => {
-        this.errorMessage = 'Cannot delete this recipe.';
+        this.errorMessage = 'Could not delete this recipe. Please try again.';
       }
     })
   }

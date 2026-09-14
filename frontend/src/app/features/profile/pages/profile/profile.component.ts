@@ -66,13 +66,13 @@ export class ProfileComponent implements OnInit {
       },
       error: (err) => {
         this.user = null;
-        this.errorMessage = 'Unable to load user';
+        this.errorMessage = 'Could not load user';
       }
     })
   }
 
   submit() {
-    if (this.userForm.invalid) {
+    if (this.userForm.invalid || this.submitting) {
       this.userForm.markAllAsTouched();
       return;
     }

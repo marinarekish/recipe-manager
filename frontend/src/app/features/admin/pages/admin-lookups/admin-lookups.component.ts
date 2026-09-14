@@ -40,7 +40,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load categories.';
+          this.errorMessage = 'Could not load categories. Please try again.';
         }
       })
     } else if (tab === ActiveTab.cuisines) {
@@ -53,7 +53,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load cuisines.';
+          this.errorMessage = 'Could not load cuisines. Please try again.';
         }
       })
     } else if (tab === ActiveTab.ingredients) {
@@ -66,7 +66,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load ingredients.';
+          this.errorMessage = 'Could not load ingredients. Please try again.';
         }
       })
     }
@@ -90,7 +90,7 @@ export class AdminLookupsComponent implements OnInit {
           this.categories = this.categories.filter(c => c.categoryId !== index);
         },
         error: () => {
-          this.errorMessage = "Unable to delete the category.";
+          this.errorMessage = "Could not delete the category. Please try again.";
         }
       });
     } else if (this.currentTab === ActiveTab.cuisines) {
@@ -99,7 +99,7 @@ export class AdminLookupsComponent implements OnInit {
           this.cuisines = this.cuisines.filter(c => c.cuisineId !== index);
         },
         error: () => {
-          this.errorMessage = "Unable to delete the cuisine.";
+          this.errorMessage = "Could not delete the cuisine. Please try again.";
         }
       });
     } else if (this.currentTab === ActiveTab.ingredients) {
@@ -108,7 +108,7 @@ export class AdminLookupsComponent implements OnInit {
           this.ingredients = this.ingredients.filter(i => i.ingredientId !== index);
         },
         error: () => {
-          this.errorMessage = "Unable to delete the ingredient.";
+          this.errorMessage = "Could not delete the ingredient. Please try again.";
         }
       });
     }

@@ -73,7 +73,7 @@ export class RecipeFormComponent implements OnInit {
   }
 
   submit() {
-    if (this.recipeForm.invalid) {
+    if (this.recipeForm.invalid || this.submitting) {
       this.recipeForm.markAllAsTouched();
       return;
     }

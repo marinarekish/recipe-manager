@@ -43,7 +43,7 @@ export class AdminUsersComponent implements OnInit {
       error: () => {
         this.loading = false;
         if (!preserveError) {
-          this.errorMessage = 'Unable to load users.';
+          this.errorMessage = 'Could not load users. Please try again.';
         }
       },
     });
