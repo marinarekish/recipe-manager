@@ -25,18 +25,18 @@
             <div class="user-main">
               <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
               <span class="user-email">{{ user.email }}</span>
-            </div>
-            <div class="user-role">
-              <select
-                class="role-select"
-                [ngModel]="roleIdOf(user)"
-                (ngModelChange)="onRoleChange(user, $event)"
-                [disabled]="busyUsers.has(user.userId)"
-                [attr.aria-label]="'Role for ' + user.firstName + ' ' + user.lastName"
-              >
-                <option [ngValue]="ROLE_ADMIN">Administrator</option>
-                <option [ngValue]="ROLE_USER">User</option>
-              </select>
+              <div class="user-role">
+                <select
+                  class="role-select"
+                  [ngModel]="roleIdOf(user)"
+                  (ngModelChange)="onRoleChange(user, $event)"
+                  [disabled]="busyUsers.has(user.userId)"
+                  [attr.aria-label]="'Role for ' + user.firstName + ' ' + user.lastName"
+                >
+                  <option [ngValue]="ROLE_ADMIN">Administrator</option>
+                  <option [ngValue]="ROLE_USER">User</option>
+                </select>
+              </div>
             </div>
             <button
               type="button"
