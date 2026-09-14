@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Recipe } from '../../../recipes/data/recipe.models';
 import { AdminRecipesService } from '../../data/admin-recipe.service';
+import {NotificationService} from '../../../../core/ui/notification.service';
 
 @Component({
   selector: 'app-admin-recipes',
@@ -13,6 +14,7 @@ import { AdminRecipesService } from '../../data/admin-recipe.service';
 
 export class AdminRecipesComponent implements OnInit {
   private readonly adminRecipeService = inject(AdminRecipesService)
+  private readonly notify = inject(NotificationService);
 
   recipes: Recipe[] = [];
   filtered: Recipe[] = [];
@@ -51,10 +53,12 @@ export class AdminRecipesComponent implements OnInit {
     this.adminRecipeService.deleteRecipe(recipe.recipeId).subscribe({
       next: () => {
         this.recipes = this.recipes.filter((r) => r.recipeId !== recipe.recipeId);
+        this.notify.success('Recipe was successfully deleted.');
         this.applyFilter();
       },
       error: () => {
         this.errorMessage = 'Could not delete this recipe. Please try again.';
+        this.notify.error('Could not delete this recipe.');
       }
     })
   }

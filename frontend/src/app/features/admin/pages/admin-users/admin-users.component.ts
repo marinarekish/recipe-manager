@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 
 import { UserDto } from '../../../../core/auth/auth.models';
 import { AdminUserService } from '../../data/admin-user.service';
+import {NotificationService} from '../../../../core/ui/notification.service';
 
 const ROLE_ADMIN = 1;
 const ROLE_USER = 2;
@@ -19,6 +20,7 @@ export class AdminUsersComponent implements OnInit {
   readonly ROLE_USER = ROLE_USER;
 
   private readonly adminUserService = inject(AdminUserService);
+  private readonly notify = inject(NotificationService);
 
   users: UserDto[] = [];
   loading = true;
@@ -72,10 +74,13 @@ export class AdminUsersComponent implements OnInit {
       next: (updated) => {
         this.busyUsers.delete(user.userId);
         this.replaceUser(updated);
+        this.notify.success("Role changed successfully.");
       },
       error: (err) => {
         this.busyUsers.delete(user.userId);
-        this.errorMessage = this.roleError(err, roleId);
+        const message = this.roleError(err, roleId);
+        this.errorMessage = message;
+        this.notify.error(message);
         this.load(true);
       },
     });
@@ -91,10 +96,12 @@ export class AdminUsersComponent implements OnInit {
       next: () => {
         this.busyUsers.delete(user.userId);
         this.users = this.users.filter((u) => u.userId !== user.userId);
+        this.notify.success("User deleted");
       },
       error: (err) => {
         this.busyUsers.delete(user.userId);
-        this.errorMessage = this.deleteError(err);
+        this.errorMessage = 'Something went wrong';
+        this.notify.error('Could not delete user');
       },
     });
   }
@@ -110,15 +117,5 @@ export class AdminUsersComponent implements OnInit {
       return 'The system must keep at least one administrator.';
     }
     return 'Could not change the role. Please try again.';
-  }
-
-  private deleteError(err: { status?: number }): string {
-    if (err.status === 403) {
-      return 'The system must keep at least one administrator.';
-    }
-    if (err.status === 404) {
-      return 'User was not found.';
-    }
-    return 'Could not delete the user. Please try again.';
   }
 }
