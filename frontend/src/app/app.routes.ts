@@ -18,6 +18,8 @@ import { RecipeFormComponent } from './features/recipes/pages/recipe-form/recipe
 import { FavoritesListComponent } from './features/favorites/pages/favorites-list/favorites-list.component';
 import { ProfileComponent } from './features/profile/pages/profile/profile.component';
 import { AdminUsersComponent } from './features/admin/pages/admin-users/admin-users.component';
+import {AdminRecipesComponent} from './features/admin/pages/admin-recipes/admin-recipes.component';
+import {AdminLookupsComponent} from './features/admin/pages/admin-lookups/admin-lookups.component';
 
 export const routes: Routes = [
   {
@@ -46,13 +48,13 @@ export const routes: Routes = [
       },
       {
         path: 'admin/lookups',
-        component: PlaceholderComponent,
+        component: AdminLookupsComponent,
         data: { title: 'Admin — Lookups' },
         canActivate: [adminGuard],
       },
       {
         path: 'admin/recipes',
-        component: PlaceholderComponent,
+        component: AdminRecipesComponent,
         data: { title: 'Admin — Recipes' },
         canActivate: [adminGuard],
       },
