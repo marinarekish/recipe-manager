@@ -1,30 +1,33 @@
 :host {
   display: block;
   height: 100vh;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--mise-font);
 }
 
 .app-layout {
   display: flex;
   height: 100%;
-  background-color: #fcfcfc;
+  background-color: var(--mise-bg);
 }
 
+/* ---- Sidebar (desktop) ---- */
+
 .sidebar {
-  width: 240px;
-  background-color: #ffffff;
-  border-right: 1px solid #f0f0f0;
+  width: var(--mise-sidebar-width);
+  background-color: var(--mise-surface);
+  border-right: 1px solid var(--mise-border);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
   box-sizing: border-box;
+  transition: transform 0.25s ease;
 }
 
 .brand-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 32px;
+  margin-bottom: var(--mise-space-6);
   padding: 0 8px;
 
   .brand-logo {
@@ -40,14 +43,14 @@
     .brand-title {
       font-weight: 700;
       font-size: 1.1rem;
-      color: #1a1a1a;
+      color: var(--mise-text);
       line-height: 1.2;
     }
 
     .brand-subtitle {
       font-size: 0.65rem;
       font-weight: 600;
-      color: #8c8c8c;
+      color: var(--mise-text-faint);
       letter-spacing: 0.5px;
     }
   }
@@ -65,12 +68,12 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: var(--mise-radius-md);
   text-decoration: none;
-  color: #595959;
+  color: var(--mise-text-muted);
   font-size: 0.9rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 
   .nav-icon {
     width: 20px;
@@ -80,8 +83,8 @@
   }
 
   &:hover {
-    background-color: #f5f5f5;
-    color: #1a1a1a;
+    background-color: var(--mise-border-strong);
+    color: var(--mise-text);
 
     .nav-icon {
       opacity: 1;
@@ -89,8 +92,8 @@
   }
 
   &.active {
-    background-color: #fceee9;
-    color: #c84b31;
+    background-color: var(--mise-accent-soft);
+    color: var(--mise-accent);
     font-weight: 600;
 
     .nav-icon {
@@ -101,16 +104,16 @@
 }
 
 .admin-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: var(--mise-space-4);
+  padding-top: var(--mise-space-4);
+  border-top: 1px solid var(--mise-border);
 
   .admin-label {
     display: block;
     padding: 0 16px 8px;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #b0b0b0;
+    color: var(--mise-placeholder);
     letter-spacing: 1px;
     text-transform: uppercase;
   }
@@ -120,49 +123,36 @@
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  gap: var(--mise-space-4);
+  padding-top: var(--mise-space-4);
+  border-top: 1px solid var(--mise-border);
 
   .user-profile {
     display: flex;
     align-items: center;
     gap: 12px;
+  }
 
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-color: #e6e6e6;
-      color: #595959;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .user-name {
+      font-size: 0.85rem;
       font-weight: 600;
-      font-size: 0.9rem;
+      color: var(--mise-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .user-info {
-      display: flex;
-      flex-direction: column;
+    .user-email {
+      font-size: 0.75rem;
+      color: var(--mise-text-faint);
+      white-space: nowrap;
       overflow: hidden;
-
-      .user-name {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #1a1a1a;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .user-email {
-        font-size: 0.75rem;
-        color: #8c8c8c;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+      text-overflow: ellipsis;
     }
   }
 
@@ -170,14 +160,17 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-height: 40px;
     background: none;
     border: none;
     padding: 6px 4px;
-    color: #595959;
+    border-radius: var(--mise-radius-md);
+    color: var(--mise-text-muted);
     font-size: 0.85rem;
     font-weight: 500;
+    font-family: inherit;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 
     .logout-icon {
       width: 18px;
@@ -186,7 +179,8 @@
     }
 
     &:hover {
-      color: #c84b31;
+      color: var(--mise-accent);
+      background-color: var(--mise-accent-soft);
 
       .logout-icon {
         opacity: 1;
@@ -195,8 +189,102 @@
   }
 }
 
+/* ---- Content ---- */
+
 .content {
   flex: 1;
-  padding: 32px;
+  padding: var(--mise-space-6);
   overflow-y: auto;
+  min-width: 0;
+}
+
+/* ---- Mobile only elements (hidden on desktop) ---- */
+
+.mobile-topbar,
+.menu-toggle,
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: min(80vw, 280px);
+    padding: 20px 16px;
+    box-shadow: var(--mise-shadow-md);
+    transform: translateX(-100%);
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background-color: rgba(0, 0, 0, 0.35);
+    border: none;
+    cursor: pointer;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 8px 0 var(--mise-space-4);
+    background-color: var(--mise-surface);
+    border-bottom: 1px solid var(--mise-border);
+    flex-shrink: 0;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: var(--mise-radius-md);
+    cursor: pointer;
+
+    .menu-bar {
+      display: block;
+      width: 20px;
+      height: 2px;
+      border-radius: 2px;
+      background-color: var(--mise-text);
+    }
+
+    &:hover {
+      background-color: var(--mise-border-strong);
+    }
+  }
+
+  .mobile-brand {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--mise-text);
+    letter-spacing: -0.01em;
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--mise-space-4) var(--mise-space-4) var(--mise-space-6);
+  }
 }

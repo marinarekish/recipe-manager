@@ -1,5 +1,5 @@
 <div class="app-layout">
-  <aside class="sidebar">
+  <aside class="sidebar" [class.is-open]="sidebarOpen()" aria-label="Main navigation">
     <div class="brand-header">
       <img src="/assets/icons/logo.svg" alt="Mise Logo" class="brand-logo" />
       <div class="brand-text">
@@ -14,19 +14,20 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="nav-item"
+        (click)="closeSidebar()"
       >
         <img src="/assets/icons/explore.png" alt="" class="nav-icon" />
         <span class="nav-label">Explore</span>
       </a>
-      <a routerLink="/recipes/me" routerLinkActive="active" class="nav-item">
+      <a routerLink="/recipes/me" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
         <img src="/assets/icons/book.png" alt="" class="nav-icon" />
         <span class="nav-label">My Recipes</span>
       </a>
-      <a routerLink="/favorites" routerLinkActive="active" class="nav-item">
+      <a routerLink="/favorites" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
         <img src="/assets/icons/heart.png" alt="" class="nav-icon" />
         <span class="nav-label">Favorites</span>
       </a>
-      <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+      <a routerLink="/profile" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
         <img src="/assets/icons/user.png" alt="" class="nav-icon" />
         <span class="nav-label">Profile</span>
       </a>
@@ -35,15 +36,15 @@
     @if (isAdmin) {
       <div class="admin-section">
         <span class="admin-label">Admin</span>
-        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
           <span class="nav-label">Users</span>
         </a>
-        <a routerLink="/admin/recipes" routerLinkActive="active" class="nav-item">
+        <a routerLink="/admin/recipes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
           <span class="nav-label">Recipes</span>
         </a>
-        <a routerLink="/admin/lookups" routerLinkActive="active" class="nav-item">
+        <a routerLink="/admin/lookups" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <img src="/assets/icons/lookup.png" alt="" class="nav-icon" />
           <span class="nav-label">Lookups</span>
         </a>
@@ -52,7 +53,7 @@
 
     <div class="sidebar-footer">
       <div class="user-profile">
-        <div class="avatar">{{ initial() }}</div>
+        <div class="avatar avatar-sm">{{ initial() }}</div>
         <div class="user-info">
           <span class="user-name">
             @if (user(); as u) {
@@ -73,6 +74,30 @@
       </button>
     </div>
   </aside>
+
+  @if (sidebarOpen()) {
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="Close navigation"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+  <div class="mobile-topbar">
+    <button
+      type="button"
+      class="menu-toggle"
+      (click)="toggleSidebar()"
+      [attr.aria-expanded]="sidebarOpen()"
+      [attr.aria-label]="sidebarOpen() ? 'Close navigation' : 'Open navigation'"
+    >
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+    </button>
+    <span class="mobile-brand">Mise</span>
+  </div>
 
   <main class="content">
     <router-outlet />

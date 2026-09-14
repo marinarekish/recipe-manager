@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -14,13 +14,23 @@ export class LayoutComponent {
   private readonly authService = inject(AuthService);
 
   readonly user = this.authService.currentUser;
+  readonly sidebarOpen = signal(false);
 
   get isAdmin(): boolean {
     return this.user()?.roles?.some((r) => r.name === 'Administrator') ?? false;
   }
 
+  toggleSidebar(): void {
+    this.sidebarOpen.update((open) => !open);
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
+  }
+
   logout(): void {
     this.authService.logout();
+    this.closeSidebar();
     void this.router.navigateByUrl('/login');
   }
 

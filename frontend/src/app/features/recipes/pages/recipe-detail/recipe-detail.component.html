@@ -7,12 +7,12 @@
   </div>
 
   @if (loading) {
-    <div class="detail-state">
+    <div class="state">
       <div class="spinner"></div>
       <p class="state-text">Loading recipe...</p>
     </div>
   } @else if (errorMessage) {
-    <div class="detail-state error" role="alert">
+    <div class="state error" role="alert">
       <p class="state-text">{{ errorMessage }}</p>
     </div>
   } @else if (recipe) {

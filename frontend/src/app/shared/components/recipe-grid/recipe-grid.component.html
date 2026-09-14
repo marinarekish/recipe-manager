@@ -1,14 +1,14 @@
 @if (loading) {
-  <div class="state-container">
+  <div class="state">
     <div class="spinner"></div>
     <p class="state-text">Loading recipes...</p>
   </div>
 } @else if (errorMessage) {
-  <div class="state-container error" role="alert">
+  <div class="state error" role="alert">
     <p class="state-text">{{ errorMessage }}</p>
   </div>
 } @else if (recipes.length === 0) {
-  <div class="state-container">
+  <div class="state">
     <p class="state-text">{{ emptyMessage }}</p>
   </div>
 } @else {
