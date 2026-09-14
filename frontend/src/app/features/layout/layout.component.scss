@@ -288,3 +288,9 @@
     padding: var(--mise-space-4) var(--mise-space-4) var(--mise-space-6);
   }
 }
+
+@media (max-width: 480px) {
+  .content {
+    padding: var(--mise-space-3) var(--mise-space-3) var(--mise-space-6);
+  }
+}
