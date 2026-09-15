@@ -1,12 +1,13 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
-import {FormArray, FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
-import {RouterLink} from '@angular/router';
+import { Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import {RecipeService} from '../../data/recipe.service';
 import {AuthService} from '../../../../core/auth/auth.service';
 
 import {CreateRecipeRequest, Recipe, RecipeIngredientRequest, UpdateRecipeRequest} from '../../data/recipe.models';
+import { INGREDIENT_UNITS } from '../../data/ingredient-units';
 
 @Component({
   selector: 'app-recipe-form',
@@ -24,6 +25,7 @@ export class RecipeFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
 
   recipe: Recipe | null = null;
+  readonly ingredient_units = INGREDIENT_UNITS;
 
   isEditing = false;
   recipeId: number | null = null;
@@ -154,7 +156,7 @@ export class RecipeFormComponent implements OnInit {
     return this.formBuilder.group({
       name: ['', Validators.required],
       amount: [null, [Validators.required, Validators.min(0.1)]],
-      unit: ['', Validators.required]
+      unit: ['g', Validators.required]
     });
   }
 

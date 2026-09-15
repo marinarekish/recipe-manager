@@ -168,13 +168,16 @@
 
             <div class="field">
               <label class="field-label" [attr.for]="'ing-unit-' + $index">Unit</label>
-              <input
+              <select
                 [id]="'ing-unit-' + $index"
-                type="text"
                 formControlName="unit"
                 class="field-input"
-                placeholder="pcs"
-              />
+              >
+                <option value="" disabled>Select unit</option>
+                @for (u of ingredient_units; track u) {
+                  <option [value]="u">{{ u }}</option>
+                }
+              </select>
               @if (group.get('unit')?.touched && group.get('unit')?.hasError('required')) {
                 <p class="field-error">Required</p>
               }

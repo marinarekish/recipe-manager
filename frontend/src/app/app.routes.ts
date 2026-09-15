@@ -1,8 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './features/layout/layout.component';
 
-import { PlaceholderComponent } from './shared/components/placeholder/placeholder.component';
-
 import { authGuard } from './core/auth/auth.guard';
 import { adminGuard } from './core/auth/admin.guard';
 import { recipeIdGuard } from './core/recipes/recipes.guard';
