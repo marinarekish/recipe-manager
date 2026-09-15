@@ -133,7 +133,7 @@
       </div>
 
       <div formArrayName="ingredients" class="ingredient-rows">
-        @for (group of ingredients.controls; track $index) {
+        @for (group of ingredients.controls; track group) {
           <div class="ingredient-row" [formGroupName]="$index">
             <div class="field">
               <label class="field-label" [attr.for]="'ing-name-' + $index">Name</label>
@@ -143,7 +143,14 @@
                 formControlName="name"
                 class="field-input"
                 placeholder="Eggs"
+                [attr.list]="'ing-name-list-' + $index"
+                autocomplete="off"
               />
+              <datalist [id]="'ing-name-list-' + $index">
+                @for (opt of filteredIngredients($index); track opt.ingredientId) {
+                  <option [value]="opt.name"></option>
+                }
+              </datalist>
               @if (group.get('name')?.touched && group.get('name')?.hasError('required')) {
                 <p class="field-error">Required</p>
               }
@@ -174,7 +181,7 @@
                 class="field-input"
               >
                 <option value="" disabled>Select unit</option>
-                @for (u of ingredient_units; track u) {
+                @for (u of unitOptionsForRow($index); track u) {
                   <option [value]="u">{{ u }}</option>
                 }
               </select>
@@ -186,7 +193,7 @@
             <button
               type="button"
               class="remove-row-btn"
-              (click)="removeIngredient($index)"
+              (click)="removeIngredient(group)"
               [disabled]="ingredients.length <= 1"
               aria-label="Remove ingredient row"
             >
@@ -194,10 +201,10 @@
             </button>
           </div>
         }
+
         <div class="card-footer">
           <button type="button" class="add-row-btn" (click)="addIngredient()">+ Add row</button>
         </div>
-
       </div>
     </div>
 

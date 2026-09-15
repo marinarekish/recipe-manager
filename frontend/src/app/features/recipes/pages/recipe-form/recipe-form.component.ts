@@ -1,12 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import {RecipeService} from '../../data/recipe.service';
-import {AuthService} from '../../../../core/auth/auth.service';
+import { RecipeService } from '../../data/recipe.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { IngredientService } from '../../data/ingredient.service';
 
-import {CreateRecipeRequest, Recipe, RecipeIngredientRequest, UpdateRecipeRequest} from '../../data/recipe.models';
+import { CreateRecipeRequest, Recipe, RecipeIngredientRequest, UpdateRecipeRequest} from '../../data/recipe.models';
+import { Ingredient } from '../../data/ingredient.models';
 import { INGREDIENT_UNITS } from '../../data/ingredient-units';
 
 @Component({
@@ -19,19 +21,22 @@ import { INGREDIENT_UNITS } from '../../data/ingredient-units';
 export class RecipeFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private recipeService = inject(RecipeService);
-  private authService = inject(AuthService);
-
   private formBuilder = inject(FormBuilder);
 
+  private recipeService = inject(RecipeService);
+  private ingredientService = inject(IngredientService);
+  private authService = inject(AuthService);
+
   recipe: Recipe | null = null;
-  readonly ingredient_units = INGREDIENT_UNITS;
+  allIngredients: Ingredient[] = [];
+  readonly ingredientUnits = INGREDIENT_UNITS;
 
   isEditing = false;
   recipeId: number | null = null;
   errorMessage = '';
   submitting = false;
 
+  // form
   recipeForm = this.formBuilder.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     cuisineName: ['', Validators.required],
@@ -48,7 +53,10 @@ export class RecipeFormComponent implements OnInit {
     return this.recipeForm.get('ingredients') as FormArray;
   }
 
+  // lifecycle
   ngOnInit(): void {
+    this.loadIngredients(); // cash for autocomplete
+
     const rawId = this.route.snapshot.paramMap.get('id');
     const paramId = rawId !== null ? Number(rawId) : NaN;
 
@@ -61,27 +69,68 @@ export class RecipeFormComponent implements OnInit {
 
     this.isEditing = true;
     this.recipeId = paramId;
-    this.load(paramId);
+    this.loadRecipe(paramId);
   }
 
+  // Template helpers
   addIngredient(): void {
     this.ingredients.push(this.createIngredientGroup());
   }
 
-  removeIngredient(index: number): void {
-    if (this.ingredients.length > 1) {
+  removeIngredient(row: AbstractControl): void {
+    if (this.ingredients.length <= 1) {
+      return;
+    }
+    const index = this.ingredients.controls.indexOf(row);
+    if (index >= 0) {
       this.ingredients.removeAt(index);
     }
   }
 
-  submit() {
+  unitOptionsForRow(index: number): string[] {
+    const group = this.ingredients.at(index);
+    const current = group
+      ? String(group.get('unit')?.value ?? '').trim()
+      : '';
+    return current && !this.ingredientUnits.includes(current)
+      ? [current, ...this.ingredientUnits]
+      : this.ingredientUnits;
+  }
+
+  filteredIngredients(rowIndex: number): Ingredient[] {
+    const q = (this.ingredients.at(rowIndex).get('name')?.value ?? '')
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    if (!q) {
+      return [];
+    }
+
+    return this.allIngredients
+      .filter((i) => i.name.toLowerCase().includes(q))
+      .slice(0, 20);
+  }
+
+  canEdit(): boolean {
+    const user = this.authService.currentUser();
+    const recipe = this.recipe;
+    if (!user || !recipe) {
+      return false;
+    }
+    return user.userId === recipe.authorId;
+  }
+
+  // Submitting
+  submit(): void {
     if (this.recipeForm.invalid || this.submitting) {
       this.recipeForm.markAllAsTouched();
       return;
     }
 
-    if (!this.recipe?.recipeId && this.isEditing) return;
-    if (this.submitting) return;
+    if (this.isEditing && !this.recipe?.recipeId) {
+      return;
+    }
 
     const body = this.buildBody();
     this.submitting = true;
@@ -94,18 +143,15 @@ export class RecipeFormComponent implements OnInit {
     }
   }
 
-  canEdit(): boolean {
-    const user = this.authService.currentUser();
-    const recipe = this.recipe;
-
-    if (!user || !recipe) {
-      return false;
-    }
-
-    return user.userId === recipe.authorId;
+  // --- Private: load ---
+  private loadIngredients(): void {
+    this.ingredientService.getAll().subscribe({
+      next: (list) => { this.allIngredients = list ?? []; },
+      error: () => { this.allIngredients = []; },
+    });
   }
 
-  private load(id: number) {
+  private loadRecipe(id: number) {
     this.errorMessage = '';
     this.recipe = null;
 
@@ -150,6 +196,8 @@ export class RecipeFormComponent implements OnInit {
         this.handleSaveError(err);
       }
     })
+
+    this.loadIngredients();
   }
 
   private createIngredientGroup() {
@@ -160,6 +208,7 @@ export class RecipeFormComponent implements OnInit {
     });
   }
 
+  // API write
   private buildBody() {
     const v = this.recipeForm.getRawValue();
 
