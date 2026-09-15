@@ -29,18 +29,25 @@ The goal is a working, readable application with honest documentation of both in
 - **Passwordless registration and login** — accounts are created with name + email; authentication uses a one-time 6-digit login code, never a password.
 - **Recipes** — create, read, update, and delete; organized by category and cuisine; each recipe has preparation/cooking time, servings, instructions, and a list of ingredients with amount and unit.
 - **Ownership rules** — a regular user can edit/delete only recipes they authored; administrators can edit/delete any recipe.
+- **Explore vs My Recipes** — Explore shows the shared collection (all recipes); My Recipes filters to the current user's own recipes for management.
 - **Favorites** — users can save and remove recipes to/from their personal favorites list.
+- **Profile** — view and update the current user's name/phone (email is read-only) and delete their own account.
 - **Categories, cuisines, and ingredients** — reference data. Lookup values are seeded and can be created on the fly when a recipe references a new name (see Engineering decisions).
 - **User roles** — `User` (default) and `Administrator`.
-- **Administrator capabilities (backend)** — list/view/delete users, assign or replace a user's role, delete any recipe, and delete reference-data records.
+- **Administrator capabilities + admin UI** — implemented screens for **Users** (list, change role, delete), **Recipes** (all recipes, search, delete), and **Lookups** (Categories / Cuisines / Ingredients tabs, delete). Deleting reference data still in use by a recipe returns `409`.
 - **Recipe images via URL** — each recipe stores an optional `imageUrl`; the frontend renders it with a fallback placeholder when absent.
 - **Validation and error handling** — data-annotation validation on requests, database check constraints, and a `Result<T>` pattern that maps to consistent HTTP status codes.
+- **Feedback and session UX** — Material snackbars for success/error feedback; the HTTP interceptor attaches the JWT and logs out + redirects to `/login` on a `401` (excluding public auth routes).
 
-### Planned / not yet implemented
+### Not implemented / intentionally deferred
 
-- **Admin user-management UI** — the backend and route exist, but the frontend screen is currently a placeholder.
-- **Recipe search / filtering / sorting / pagination**.
+- **Recipe search / filtering / sorting / pagination.**
+- **Public deployment** — local run only (Swagger Development-only, CORS for local origins, no CI/CD).
+- **Email delivery** — the login code is only logged in the API console in development.
 - **Frontend test suites** (see Testing and Known limitations).
+
+The current scope is considered the **final state** of the project; the
+items above are documented known limitations, not an active plan.
 
 ---
 
@@ -93,7 +100,7 @@ RecipeManager.Application    Services, interfaces, contracts/DTOs, AutoMapper pr
 
 This is **"Clean Architecture-inspired," not strict Clean Architecture.** The layer separation, dependency direction, and separation of persistence concerns are deliberate, but the project is a solo application and consciously trades some textbook purity (e.g. no repository abstraction) for directness. This pragmatism keeps the code small while still demonstrating the layering concepts.
 
-A full local setup guide lives in `docs/backend-runbook.md`.
+A full local setup guide lives in `docs/runbooks/backend-runbook.md`.
 
 ### Frontend — Angular 19 standalone
 
@@ -120,7 +127,7 @@ register → request login code → verify code → JWT → authenticated applic
 1. **Register** — `POST /api/auth/register` (public). Creates a user with the default `User` role. No password is ever involved.
 2. **Request login code** — `POST /api/auth/request-code` (public). The server generates a cryptographically random 6-digit code and stores only its SHA-256 hash. The code expires after 10 minutes.
 3. **Verify code** — `POST /api/auth/verify-code` (public). The code is compared in constant time, marked as used, and a JWT is issued.
-4. **JWT session** — the client stores the token and user profile in `localStorage` and sends the token on subsequent requests.
+4. **JWT session** — the client stores the token and user profile in `localStorage`, sends the token on subsequent requests via an HTTP interceptor, and restores the session on reload. On a `401` the interceptor logs the user out and redirects to `/login` (public auth endpoints are excluded).
 
 Implementation notes:
 
@@ -179,7 +186,7 @@ Separately, the database cascade rules remove:
 
 The service also prevents deleting (or stripping the role from) the **last administrator**.
 
-A full entity/relationship description is in `docs/domain_model.md`.
+A full entity/relationship description is in `docs/architecture/domain_model.md`.
 
 ---
 
@@ -222,13 +229,13 @@ Jasmine + Karma are configured (`ng test`), but **no spec files are implemented 
 - No tests for reference-data `get-or-create` behavior.
 - No frontend tests.
 
-See `docs/completion-checklist.md` for a manual verification checklist covering these gaps.
+See `docs/checklist/completion-checklist.md` for a manual verification checklist covering these gaps.
 
 ---
 
 ## 10. Running locally
 
-Detailed instructions are in `docs/backend-runbook.md` and `docs/frontend-runbook.md`. Summary:
+Detailed instructions are in `docs/runbooks/backend-runbook.md` and `docs/runbooks/frontend-runbook.md`. Summary:
 
 **Prerequisites:** .NET SDK 10.0, Node.js ≥ 18 + npm ≥ 8, PostgreSQL (recent/current) running on `localhost:5432`, and the `dotnet-ef` tool.
 
@@ -262,43 +269,46 @@ ng serve
 
 ## 11. Documentation
 
-The `docs/` directory holds focused reference material:
+Start at **`docs/README.md`** for the index and reading order. Focused reference material:
 
-- `docs/api.md` — complete REST API contract (endpoints, request/response examples).
-- `docs/auth-flow.md` — passwordless authentication design and implementation notes.
-- `docs/domain_model.md` — entity model, relationships, and constraints.
-- `docs/result-convention.md` — the `Result<T>` to HTTP status-code mapping.
-- `docs/backend-runbook.md` and `docs/frontend-runbook.md` — local setup and development guides.
-- `docs/scheme.sql` / `docs/drop.sql` — PostgreSQL DDL for reference (kept in sync with migrations).
-- `docs/class-diagram.png`, `docs/er-diagram.png` — class and entity-relationship diagrams.
+- `docs/demo-script.md` — portfolio video / walkthrough script (`▶ VIDEO` markers, ~5–8 min).
+- `docs/api/api.md` — REST API contract (endpoints, request/response examples). The canonical reference is Swagger (`/swagger` in Development); this doc is kept in sync on a best-effort basis.
+- `docs/auth/auth-flow.md` — passwordless authentication design and implementation notes.
+- `docs/architecture/domain_model.md` — entity model, relationships, and constraints.
+- `docs/architecture/result-convention.md` — the `Result<T>` to HTTP status-code mapping.
+- `docs/runbooks/backend-runbook.md` and `docs/runbooks/frontend-runbook.md` — local setup and development guides.
+- `docs/checklist/completion-checklist.md` — manual verification checklist (maintainer-facing).
+- `docs/reference/scheme.sql` / `docs/reference/drop.sql` — PostgreSQL DDL for reference (kept in sync with migrations).
+- `docs/reference/class-diagram.png`, `docs/reference/er-diagram.png` — class and entity-relationship diagrams.
 
 ---
 
 ## 12. Known limitations / deferred work
 
 - **Frontend tests** — Jasmine/Karma are configured but no spec files exist. Deferred.
-- **Admin user-management UI** — the backend and route exist; the frontend screen is a placeholder and in progress.
-- **`returnUrl` is incomplete** — `authGuard` writes a `returnUrl` query parameter, but no component yet consumes it; after login the user is routed to the recipe area regardless of the originally requested path.
-- **Token expiry / session UX** — the frontend does not yet globally detect an expired JWT (401) to redirect or refresh; components display local error messages. No refresh-token flow.
-- **Rate limiting / attempt limits** — login-code requests and verification attempts are not rate-limited. Noted in `docs/auth-flow.md` as future work.
+- **`returnUrl` deep links** — `authGuard` and the 401 interceptor write a `returnUrl` query parameter, but the login page does not consume it yet; after login the user is routed to the recipe area.
+- **Rate limiting / attempt limits** — login-code requests and verification attempts are not rate-limited. Noted in `docs/auth/auth-flow.md` as future work.
 - **Email delivery** — the login code is logged to the console in development; there is no email provider.
 - **Image upload/storage** — recipes store an image URL only; there is no upload subsystem.
-- **No production infrastructure** — no Docker, CI/CD, or deployment configuration. Swagger is Development-only. CORS is configured for local development origins.
+- **No production infrastructure** — no public deployment, Docker, CI/CD. Swagger is Development-only; CORS is configured for local development origins.
 - **Search / filtering / pagination** — not implemented.
 
 ---
 
-## 13. Roadmap
+## 13. Possible future work (out of current scope)
 
-### Near-term quality
+The current functionality is considered the **final state** of the project.
+The following are possible extensions if the project is ever revisited —
+they are not an active plan:
 
-- Add frontend unit tests (Jasmine/Karma already configured).
-- Complete `returnUrl` deep-link handling and add global expired-token (401) handling.
-- Add controller/integration tests and deletion-cascade tests.
+### Quality / tests
+
+- Frontend unit tests (Jasmine/Karma already configured).
+- Controller/integration tests and deletion-cascade tests.
+- Complete `returnUrl` deep-link handling.
 
 ### Functional enhancements
 
-- Admin user-management UI.
 - Recipe search / filtering / sorting / pagination.
 
 ### Production-oriented
@@ -306,7 +316,7 @@ The `docs/` directory holds focused reference material:
 - Rate limiting on authentication endpoints and login-code attempt limits.
 - Real email delivery for login codes.
 - Refresh-token flow and stronger session storage (e.g. HttpOnly cookies).
-- Containerization and CI/CD.
+- Public deployment: containerization and CI/CD.
 
 ---
 
