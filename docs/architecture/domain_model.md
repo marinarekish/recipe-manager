@@ -295,7 +295,7 @@ Users log in with an email + one-time login code instead of a password:
    marks the token as used, and returns the user profile with roles and
    a JWT access token.
 
-A real email provider is a planned follow-up.
+A real email provider is a known limitation (out of current scope).
 See `auth-flow.md` for details.
 
 ---
@@ -424,9 +424,9 @@ Ingredient quantities are stored in the junction table because they depend on a 
 
 ---
 
-# Future Extensions
+# Possible Extensions (out of current scope)
 
-Possible future improvements include:
+Possible extensions if the project is revisited:
 
 - Recipe image upload/storage (recipes currently store an optional image
   URL only; the frontend falls back to a placeholder)

@@ -86,7 +86,7 @@ failures. Controllers use `ToActionResult()` to map to HTTP:
 
 See `result-convention.md` for the full mapping.
 
-## Known issues / future work
+## Known limitations
 
 1. **No email sender** — the code is written to the log
    (`logger.LogInformation("Login code ... {Code}")`), development-only

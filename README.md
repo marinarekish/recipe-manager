@@ -107,7 +107,7 @@ A full local setup guide lives in `docs/runbooks/backend-runbook.md`.
 - **Standalone components** (no NgModules), bootstrapped via `bootstrapApplication` in `src/main.ts`.
 - **Feature/core/shared structure:**
   - `core/` — cross-cutting auth (service, guards, interceptor, models) and route-level helpers.
-  - `shared/components/` — reusable presentational components (`recipe-card`, `recipe-grid`, `placeholder`).
+  - `shared/components/` — reusable presentational components (`recipe-card`, `recipe-grid`).
   - `features/` — screen-level features (`auth`, `layout`, `recipes`, `favorites`, `profile`), each split into `data/` (API services + models) and `pages/` (view components).
 - **Router** — routes are defined in `app.routes.ts`; guarded by `authGuard` (protected area), `adminGuard` (admin-only area), and a `recipeIdGuard` (id parameter validation).
 - **HTTP** — configured via `provideHttpClient(withInterceptors([authInterceptor]))`; the interceptor attaches the stored JWT as `Authorization: Bearer …`.
@@ -271,7 +271,7 @@ ng serve
 
 Start at **`docs/README.md`** for the index and reading order. Focused reference material:
 
-- `docs/demo-script.md` — portfolio video / walkthrough script (`▶ VIDEO` markers, ~5–8 min).
+- `docs/demo/README.md` — screen-recorded walkthrough of the app (auth, recipes, favorites, profile, admin), with recordings.
 - `docs/api/api.md` — REST API contract (endpoints, request/response examples). The canonical reference is Swagger (`/swagger` in Development); this doc is kept in sync on a best-effort basis.
 - `docs/auth/auth-flow.md` — passwordless authentication design and implementation notes.
 - `docs/architecture/domain_model.md` — entity model, relationships, and constraints.

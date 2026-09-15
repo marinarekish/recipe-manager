@@ -249,7 +249,7 @@ frontend/src/
 │   │   ├── auth/               # AuthService, auth models, authGuard, adminGuard, interceptor
 │   │   └── recipes/            # recipeIdGuard (route param validation)
 │   ├── shared/
-│   │   └── components/         # recipe-card, recipe-grid, placeholder
+│   │   └── components/         # recipe-card, recipe-grid
 │   ├── features/
 │   │   ├── auth/               # login, register, verify-code pages
 │   │   ├── layout/             # app shell (sidebar + router outlet)
@@ -294,8 +294,9 @@ holds reusable presentational components.
   `:id` route parameter.
 - **Routes** — protected area: `/recipes` (Explore), `/recipes/me`
   (My Recipes), `/recipes/new` (create), `/recipes/:id`,
-  `/recipes/:id/edit`, `/favorites`, `/profile`, `/admin/users`
-  (placeholder). Public: `/login`, `/register`, `/verify`.
+  `/recipes/:id/edit`, `/favorites`, `/profile`, `/admin/users`,
+  `/admin/recipes`, `/admin/lookups`. Public: `/login`, `/register`,
+  `/verify`.
 - **Recipe screens** — explore list, my-recipes list, detail page, and a
   create/edit form with dynamic ingredient rows.
 - **Favorites** — favorites list and heart toggle on recipe cards/detail.
@@ -305,15 +306,11 @@ holds reusable presentational components.
 
 - **Frontend unit / e2e tests** — Jasmine + Karma are configured
   (`ng test`), but no spec files exist yet. Deferred.
-- **Admin user-management UI** — the route exists but renders a
-  placeholder component.
 - **NgRx state management** — auth state uses Angular signals.
 - **SSR / PWA**.
 - **`returnUrl` deep-links** — `authGuard` writes a `returnUrl` query
   parameter, but no page consumes it yet; after login the user is routed
   to the recipes area.
-- **Global expired-JWT (401) handling** — components show local error
-  messages; there is no automatic redirect or refresh flow.
 
 ## Further reading
 

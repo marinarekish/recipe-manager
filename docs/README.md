@@ -12,15 +12,15 @@
    migrations, and run the API.
 3. **`runbooks/frontend-runbook.md`** — `ng serve`, `apiBaseUrl`, CORS origins,
    and how to read the login code from the API logs.
-4. **`demo-script.md`** — portfolio video / walkthrough scenarios
-   (`▶ VIDEO` markers, ~5–8 min).
+4. **`demo/README.md`** — local screen-recorded walkthrough (user + admin
+   scenarios, with recordings).
 
 ## Map
 
 | Path                                   | Contents                                                   |
 | -------------------------------------- | ---------------------------------------------------------- |
 | `README.md`                            | This index                                                 |
-| `demo-script.md`                       | Local screen-recording scenarios for a portfolio demo     |
+| `demo/README.md`                       | Screen-recorded demo walkthrough (recordings linked)       |
 | `api/api.md`                           | REST API contract (endpoints, request/response examples)   |
 | `auth/auth-flow.md`                    | Passwordless login design + implementation notes           |
 | `architecture/domain_model.md`         | Entities, relationships, constraints, business rules       |
