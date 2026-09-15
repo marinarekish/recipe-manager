@@ -1,7 +1,7 @@
 # Recipe Manager — Frontend
 
-Angular 19 SPA. See **`docs/frontend-runbook.md`** for setup, auth flow,
-and how to run against the local API.
+Angular 19 SPA. See **`docs/runbooks/frontend-runbook.md`** for setup, auth
+flow, and how to run against the local API.
 
 ## Quick start
 
