@@ -1,12 +1,13 @@
-<section class="recipes-page">
+<section class="recipes-page content-width">
   <header class="page-header">
-    <h1>Explore</h1>
+    <h1 class="page-title">Explore</h1>
   </header>
 
   <app-recipe-grid
     [recipes]="recipes"
     [loading]="loading"
     [errorMessage]="errorMessage"
+    [emptyMessage]="'No recipes yet.'"
     [favoriteIds]="favoriteIds"
     (favoriteToggle)="onFavoriteToggle($event)"
   />

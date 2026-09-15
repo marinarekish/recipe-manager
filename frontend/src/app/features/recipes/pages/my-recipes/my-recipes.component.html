@@ -1,7 +1,7 @@
-<section class="recipes-page">
+<section class="recipes-page content-width">
   <header class="page-header">
-    <h1>My Recipes</h1>
-    <a routerLink="/recipes/new" class="create-btn">
+    <h1 class="page-title">My Recipes</h1>
+    <a routerLink="/recipes/new" class="btn btn-primary">
       <span>+</span> Create a recipe
     </a>
   </header>
@@ -10,6 +10,7 @@
     [recipes]="recipes"
     [loading]="loading"
     [errorMessage]="errorMessage"
+    [emptyMessage]="'No recipes yet. Click Create a recipe to get started.'"
     [favoriteIds]="favoriteIds"
     (favoriteToggle)="onFavoriteToggle($event)"
   />

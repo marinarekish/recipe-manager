@@ -60,7 +60,6 @@ export class FavoritesListComponent implements OnInit {
           this.loading = false;
           this.errorMessage =
             'Could not load your favorite recipes. Please try again.';
-          console.error(err);
         },
       });
   }
@@ -75,7 +74,6 @@ export class FavoritesListComponent implements OnInit {
         },
         error: (err) => {
           this.errorMessage = 'Could not remove from favorites.';
-          console.error(err);
         },
       });
       return;
@@ -94,7 +92,6 @@ export class FavoritesListComponent implements OnInit {
       },
       error: (err) => {
         this.errorMessage = 'Could not add to favorites.';
-        console.error(err);
       },
     });
   }

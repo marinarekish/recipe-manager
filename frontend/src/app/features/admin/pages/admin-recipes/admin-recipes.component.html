@@ -1,4 +1,4 @@
-<section class="admin-recipes-page">
+<section class="admin-recipes-page content-width">
   <div class="page-topbar">
     <h1 class="page-title">Recipes</h1>
     <div class="search-box">
@@ -16,73 +16,128 @@
     <div class="form-alert error" role="alert">{{ errorMessage }}</div>
   }
 
-  <div class="card">
-    @if (loading) {
+  @if (loading) {
+    <div class="card">
       <div class="state">
         <div class="spinner"></div>
         <p class="state-text">Loading recipes...</p>
       </div>
-    } @else if (filtered.length === 0) {
+    </div>
+  } @else if (filtered.length === 0 && searchQuery.trim()) {
+    <div class="card">
       <div class="state">
-        <p class="state-text">{{ searchQuery ? 'No recipes match your search.' : 'No recipes found.' }}</p>
+        <p class="state-text">No recipes match your search.</p>
       </div>
-    } @else {
+    </div>
+  } @else if (filtered.length === 0) {
+    <div class="card">
+      <div class="state">
+        <p class="state-text">No recipes yet.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="card table-card">
       <div class="table-wrap">
-        <table class="recipes-table">
-          <colgroup>
-            <col class="col-recipe" />
-            <col class="col-author" />
-            <col class="col-category" />
-            <col class="col-cuisine" />
-            <col class="col-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th scope="col">Recipe</th>
-              <th scope="col">Author</th>
-              <th scope="col">Category</th>
-              <th scope="col">Cuisine</th>
-              <th scope="col" class="actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (recipe of filtered; track recipe.recipeId) {
+          <table class="recipes-table">
+            <colgroup>
+              <col class="col-recipe" />
+              <col class="col-author" />
+              <col class="col-category" />
+              <col class="col-cuisine" />
+              <col class="col-actions" />
+            </colgroup>
+            <thead>
               <tr>
-                <td data-label="Recipe">
-                  <div class="recipe-cell">
-                    @if (recipe.imageUrl) {
-                      <img [src]="recipe.imageUrl" alt="" class="thumb" />
-                    } @else {
-                      <div class="thumb thumb-placeholder">
-                        <img src="/assets/icons/image-placeholder.png" alt="" />
-                      </div>
-                    }
-                    <div class="recipe-info">
-                      <a [routerLink]="['/recipes', recipe.recipeId]" class="recipe-title">
-                        {{ recipe.title }}
-                      </a>
-                      <span class="recipe-time">{{ totalTime(recipe) }} min</span>
-                    </div>
-                  </div>
-                </td>
-                <td data-label="Author">{{ recipe.authorName }}</td>
-                <td data-label="Category">{{ recipe.categoryName }}</td>
-                <td data-label="Cuisine">{{ recipe.cuisineName }}</td>
-                <td data-label="Actions" class="actions-col">
-                  <button
-                    type="button"
-                    class="delete-btn"
-                    (click)="deleteRecipe(recipe)"
-                    [attr.aria-label]="'Delete ' + recipe.title"
-                  >
-                    <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
-                  </button>
-                </td>
+                <th scope="col">Recipe</th>
+                <th scope="col">Author</th>
+                <th scope="col">Category</th>
+                <th scope="col">Cuisine</th>
+                <th scope="col" class="actions-col">Actions</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (recipe of filtered; track recipe.recipeId) {
+                <tr>
+                  <td data-label="Recipe">
+                    <div class="recipe-cell">
+                      @if (recipe.imageUrl) {
+                        <img [src]="recipe.imageUrl" alt="" class="thumb" />
+                      } @else {
+                        <div class="thumb thumb-placeholder">
+                          <img src="/assets/icons/image-placeholder.png" alt="" />
+                        </div>
+                      }
+                      <div class="recipe-info">
+                        <a [routerLink]="['/recipes', recipe.recipeId]" class="recipe-title">
+                          {{ recipe.title }}
+                        </a>
+                        <span class="recipe-time">{{ totalTime(recipe) }} min</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Author">{{ recipe.authorName }}</td>
+                  <td data-label="Category">{{ recipe.categoryName }}</td>
+                  <td data-label="Cuisine">{{ recipe.cuisineName }}</td>
+                  <td data-label="Actions" class="actions-col">
+                    <button
+                      type="button"
+                      class="delete-btn icon-btn"
+                      (click)="deleteRecipe(recipe)"
+                      [attr.aria-label]="'Delete ' + recipe.title"
+                    >
+                      <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mobile-cards">
+        @for (recipe of filtered; track recipe.recipeId) {
+          <div class="mobile-card card">
+            <a class="mobile-card-link" [routerLink]="['/recipes', recipe.recipeId]">
+              @if (recipe.imageUrl) {
+                <img [src]="recipe.imageUrl" [alt]="recipe.title" class="mobile-card-thumb" />
+              } @else {
+                <div class="mobile-card-thumb mobile-card-placeholder">
+                  <img src="/assets/icons/image-placeholder.png" alt="" />
+                </div>
+              }
+            </a>
+
+            <div class="mobile-card-body">
+              <a [routerLink]="['/recipes', recipe.recipeId]" class="mobile-card-title">
+                {{ recipe.title }}
+              </a>
+              <p class="mobile-card-author">{{ recipe.authorName }}</p>
+
+              <div class="mobile-card-tags">
+                @if (recipe.categoryName) {
+                  <span class="chip chip-category">{{ recipe.categoryName }}</span>
+                }
+                @if (recipe.cuisineName) {
+                  <span class="chip chip-cuisine">{{ recipe.cuisineName }}</span>
+                }
+              </div>
+
+              <div class="mobile-card-footer">
+                <span class="mobile-card-time">{{ totalTime(recipe) }} min</span>
+                <button
+                  type="button"
+                  class="delete-btn"
+                  (click)="deleteRecipe(recipe)"
+                  [attr.aria-label]="'Delete ' + recipe.title"
+                >
+                  <img src="/assets/icons/delete.png" alt="" class="delete-icon" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
-  </div>
-</section>
+  </section>

@@ -1,14 +1,14 @@
-<section class="profile-page">
-  <div class="profile-topbar">
+<section class="profile-page content-width">
+  <div class="page-topbar">
     <h1 class="page-title">Profile</h1>
   </div>
 
   @if (!user) {
-    <div class="profile-card">
+    <div class="card profile-card">
       @if (errorMessage) {
         <div class="form-alert error" role="alert">{{ errorMessage }}</div>
       } @else {
-        <div class="profile-state">
+        <div class="state">
           <div class="spinner"></div>
           <p class="state-text">Loading profile...</p>
         </div>
@@ -21,9 +21,9 @@
       class="profile-form"
       novalidate
     >
-      <div class="profile-card">
+      <div class="card profile-card">
         <div class="profile-header">
-          <div class="avatar" aria-hidden="true">{{ initials }}</div>
+          <div class="avatar avatar-lg avatar-accent" aria-hidden="true">{{ initials }}</div>
           <div class="profile-identity">
             <span class="profile-name">{{ user.firstName }} {{ user.lastName }}</span>
             <span class="role-badge" [class.admin]="isAdmin">

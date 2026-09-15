@@ -4,8 +4,10 @@ import { UserService } from '../../data/user.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { UserDto } from '../../../../core/auth/auth.models';
 import { UpdateUserRequest } from '../../data/user.models';
+import { NotificationService } from '../../../../core/ui/notification.service';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {Router} from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -22,6 +24,8 @@ export class ProfileComponent implements OnInit {
   private router = inject(Router);
 
   private formBuilder = inject(FormBuilder);
+
+  private readonly notify = inject(NotificationService);
 
   user: UserDto | null = null;
   submitting = false;
@@ -66,13 +70,13 @@ export class ProfileComponent implements OnInit {
       },
       error: (err) => {
         this.user = null;
-        this.errorMessage = 'Unable to load user';
+        this.errorMessage = 'Could not load user';
       }
     })
   }
 
   submit() {
-    if (this.userForm.invalid) {
+    if (this.userForm.invalid || this.submitting) {
       this.userForm.markAllAsTouched();
       return;
     }
@@ -102,12 +106,14 @@ export class ProfileComponent implements OnInit {
           phone: user.phone,
         });
 
+        this.notify.success('Profile saved');
         this.authService.updateCurrentUser(user);
 
       },
       error: (err) => {
         this.submitting = false;
-        this.errorMessage = 'Something went wrong';
+        this.errorMessage = 'Could not save profile. Please try again.';
+        this.notify.error('Could not save profile.');
       }
     })
   }

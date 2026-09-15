@@ -1,9 +1,9 @@
-<section class="admin-lookups-page">
+<section class="admin-lookups-page content-width">
   <div class="page-topbar">
     <h1 class="page-title">Lookups</h1>
   </div>
 
-  <div class="lookups-card">
+  <div class="card">
     <div class="tabs" role="tablist">
       <button
         type="button"
@@ -63,7 +63,7 @@
                     <td class="actions-col">
                       <button
                         type="button"
-                        class="delete-btn"
+                        class="delete-btn icon-btn"
                         (click)="deleteItem(category.categoryId)"
                         [attr.aria-label]="'Delete ' + category.name"
                       >
@@ -95,7 +95,7 @@
                     <td class="actions-col">
                       <button
                         type="button"
-                        class="delete-btn"
+                        class="delete-btn icon-btn"
                         (click)="deleteItem(cuisine.cuisineId)"
                         [attr.aria-label]="'Delete ' + cuisine.name"
                       >
@@ -127,7 +127,7 @@
                     <td class="actions-col">
                       <button
                         type="button"
-                        class="delete-btn"
+                        class="delete-btn icon-btn"
                         (click)="deleteItem(ingredient.ingredientId)"
                         [attr.aria-label]="'Delete ' + ingredient.name"
                       >

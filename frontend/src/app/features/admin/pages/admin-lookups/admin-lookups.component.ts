@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { AdminLookupService} from '../../data/admin-lookup.service';
 import { ActiveTab, CategoryResponse, CuisineResponse, IngredientResponse } from '../../data/admin-lookup.models';
+import { NotificationService } from '../../../../core/ui/notification.service';
 
 @Component({
   selector: 'app-admin-lookups',
@@ -12,6 +13,7 @@ import { ActiveTab, CategoryResponse, CuisineResponse, IngredientResponse } from
 export class AdminLookupsComponent implements OnInit {
   readonly ActiveTab = ActiveTab;
   private readonly adminLookupService = inject(AdminLookupService);
+  private readonly notify = inject(NotificationService);
 
   categories: CategoryResponse[] = [];
   cuisines: CuisineResponse[] = [];
@@ -40,7 +42,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load categories.';
+          this.errorMessage = 'Could not load categories. Please try again.';
         }
       })
     } else if (tab === ActiveTab.cuisines) {
@@ -53,7 +55,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load cuisines.';
+          this.errorMessage = 'Could not load cuisines. Please try again.';
         }
       })
     } else if (tab === ActiveTab.ingredients) {
@@ -66,7 +68,7 @@ export class AdminLookupsComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.errorMessage = 'Unable to load ingredients.';
+          this.errorMessage = 'Could not load ingredients. Please try again.';
         }
       })
     }
@@ -88,27 +90,33 @@ export class AdminLookupsComponent implements OnInit {
       this.adminLookupService.deleteCategory(index).subscribe({
         next: (categories) => {
           this.categories = this.categories.filter(c => c.categoryId !== index);
+          this.notify.success("Category deleted successfully.");
         },
         error: () => {
-          this.errorMessage = "Unable to delete the category.";
+          this.errorMessage = 'Something went wrong';
+          this.notify.error('Could not delete the category.');
         }
       });
     } else if (this.currentTab === ActiveTab.cuisines) {
       this.adminLookupService.deleteCuisine(index).subscribe({
         next: (cuisines) => {
           this.cuisines = this.cuisines.filter(c => c.cuisineId !== index);
+          this.notify.success("Cuisine deleted successfully.");
         },
         error: () => {
-          this.errorMessage = "Unable to delete the cuisine.";
+          this.errorMessage = 'Something went wrong';
+          this.notify.error('Could not delete the cuisine.');
         }
       });
     } else if (this.currentTab === ActiveTab.ingredients) {
       this.adminLookupService.deleteIngredient(index).subscribe({
         next: (ingredients) => {
           this.ingredients = this.ingredients.filter(i => i.ingredientId !== index);
+          this.notify.success("Ingredient deleted successfully.");
         },
         error: () => {
-          this.errorMessage = "Unable to delete the ingredient.";
+          this.errorMessage = 'Something went wrong';
+          this.notify.error('Could not delete the ingredient.');
         }
       });
     }
